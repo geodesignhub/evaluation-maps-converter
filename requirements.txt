@@ -7,5 +7,9 @@ geojson
 gunicorn
 itsdangerous==0.24
 requests
-shapely==1.5.9
 sqlitedict
+pyproj
+shapely==1.5.9
+numpy==1.9.0
+cligj>=0.4
+fiona==1.5.0
