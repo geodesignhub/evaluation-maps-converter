@@ -1,0 +1,11 @@
+# Install with: `pip install -r requirements.txt`
+Flask
+Jinja2
+MarkupSafe
+Werkzeug
+geojson
+gunicorn
+itsdangerous==0.24
+requests
+shapely==1.5.9
+sqlitedict
