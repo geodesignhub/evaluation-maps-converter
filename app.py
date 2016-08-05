@@ -64,6 +64,7 @@ def upload_file():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             op['msg']="File Uploaded successfully"
+            
             myEvalConverter = EvaluationConverter.ConvertEvaluation()
             gj = myEvalConverter.convert()
             op['gj'] = gj

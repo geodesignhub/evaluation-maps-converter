@@ -1,17 +1,17 @@
 <!doctype html>
-<title>Flaskr</title>
-<link rel=stylesheet type=text/css  href="{{ url_for('static', filename='css/style.css') }}">
+<title>Geodesign Hub Evaluation Maps Converter</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/flatty.css') }}">
 <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 <div class=page>
-  <h1>Geodesign Hub Evaluation Maps Converter</h1>
-  <div class=metanav>
- 
-  </div>
+    <h1>Geodesign Hub Evaluation Maps Converter</h1>
+    <div class=metanav>
 
-  {% block body %}{% endblock %}
+    </div>
 
-<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/humane.min.js') }}"></script>
- {% block footer %}{% endblock %}
+    {% block body %}{% endblock %}
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/humane.min.js') }}"></script>
+    {% block footer %}{% endblock %}
 </div>

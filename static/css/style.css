@@ -23,6 +23,28 @@ h2 {
     font-size: 1.2em;
 }
 
+h3 {
+    font-size: 24px;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+
+p {
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    background-color: #fff;
+}
+
+h3 small {
+    font-size: 65%;
+    font-weight: 400;
+    line-height: 1;
+    color: #777;
+}
+
 .page {
     font-family: 'Open Sans', sans-serif;
     margin: 2em auto;
@@ -31,9 +53,136 @@ h2 {
     padding: 0.8em;
     background: white;
 }
-.page p{
-	font-size: 12px;
+
+.page p {
+    font-size: 12px;
 }
+
 a {
     color: #3a9bdc;
+}
+
+.form-style-7 {
+    max-width: 400px;
+    margin: 50px auto;
+    background: #fff;
+    border-radius: 2px;
+    padding: 20px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.form-style-7 h1 {
+    display: block;
+    text-align: center;
+    padding: 0;
+    margin: 0px 0px 20px 0px;
+    color: #5C5C5C;
+    font-size: x-large;
+}
+
+.form-style-7 ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.form-style-7 li {
+    display: block;
+    padding: 9px;
+    border: 1px solid #DDDDDD;
+    margin-bottom: 30px;
+    border-radius: 3px;
+}
+
+.form-style-7 li:last-child {
+    border: none;
+    margin-bottom: 0px;
+    text-align: center;
+}
+
+.form-style-7 li > label {
+    display: block;
+    float: left;
+    margin-top: -19px;
+    background: #FFFFFF;
+    height: 14px;
+    padding: 2px 5px 2px 5px;
+    color: #B9B9B9;
+    font-size: 14px;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.form-style-7 input[type="text"],
+.form-style-7 input[type="date"],
+.form-style-7 input[type="datetime"],
+.form-style-7 input[type="email"],
+.form-style-7 input[type="number"],
+.form-style-7 input[type="search"],
+.form-style-7 input[type="time"],
+.form-style-7 input[type="url"],
+.form-style-7 input[type="password"],
+.form-style-7 textarea,
+.form-style-7 select {
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    width: 100%;
+    display: block;
+    outline: none;
+    border: none;
+    height: 25px;
+    line-height: 25px;
+    font-size: 16px;
+    padding: 0;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.form-style-7 li > span {
+    background: #F3F3F3;
+    display: block;
+    padding: 3px;
+    margin: 0 -9px -9px -9px;
+    text-align: center;
+    color: #C0C0C0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
+.form-style-7 textarea {
+    resize: none;
+}
+
+
+/* #Turquoise Flat Button
+==================================================*/
+
+.turquoise-flat-button {
+    position: relative;
+    vertical-align: top;
+    width: 100%;
+    height: 60px;
+    padding: 0;
+    font-size: 22px;
+    color: white;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    background: #1abc9c;
+    border: 0;
+    border-bottom: 2px solid #12ab8d;
+    cursor: pointer;
+    -webkit-box-shadow: inset 0 -2px #12ab8d;
+    box-shadow: inset 0 -2px #12ab8d;
+}
+
+.turquoise-flat-button:active {
+    top: 1px;
+    outline: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+input[type="file"] {
+    margin: 10px;
+    min-height: 35px;
 }
