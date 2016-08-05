@@ -77,6 +77,7 @@ class ConvertEvaluation():
 
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE)
+        allGJ = {}
         for f in inputfiles:
             filepath = os.path.join(self.SOURCE_FILE_SHARE, f)
             # Reproject the file. 
@@ -85,7 +86,10 @@ class ConvertEvaluation():
             simplifiedfile,bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
             allBounds.append(bounds)
             # convert to geojson.
-            myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+            gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+            with open(gjFile,'r') as gj:
+                allGJ[f] = json.loads(gj.read())
+
 
         myGeomOps = ShapelyHelper.GeomOperations()
         allBounds = myGeomOps.calculateBounds(allBounds)
@@ -195,7 +199,7 @@ class ConvertEvaluation():
                     self.logger.info("No %s features in input evaluation." % k)
 
 
-
+        return allGJ
 
     def cleanDirectories(self):
         dirs = [self.WORKING_SHARE, self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE]

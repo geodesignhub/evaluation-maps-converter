@@ -11,28 +11,28 @@
 </form>
 {% endblock %} {% block footer %}
 <script type="text/javascript">
-$(function() {
-    $('#upload-file-btn').click(function() {
-        var form_data = new FormData($('#upload-file')[0]);
+    $(function() {
+        $('#upload-file-btn').click(function() {
+            var form_data = new FormData($('#upload-file')[0]);
 
-        var promise = $.ajax({
-            type: 'POST',
-            url: '/upload',
-            data: form_data,
-            contentType: false,
-            cache: false,
-            processData: false,
-        });
-        promise.done(function(data) {
-            console.log('OK');
-            console.log(data.msg);
-        });
-        promise.fail(function(data) {
-            console.log('error');
-            console.log(data.msg);
+            var promise = $.ajax({
+                type: 'POST',
+                url: '/upload',
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+            });
+            promise.done(function(data) {
+                console.log('OK');
+                console.log(data);
+            });
+            promise.fail(function(data) {
+                console.log('error');
+                console.log(data.msg);
 
+            });
         });
     });
-});
 </script>
 {% endblock %}
