@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p>A utility to analyze and convert a evaluation Shapefile to a evaluation GeoJSON. Upload your Evaluation Shapefile and review the performance report and based on the results a GeoJSON file can be downloaded.</p>
+<p class="subtitle">A utility to analyze and convert a evaluation Shapefile to a evaluation GeoJSON. Upload your Evaluation Shapefile and review the performance report and based on the results a GeoJSON file can be downloaded.</p>
 <form id="upload-file" class="form-style-7" method="post" enctype="multipart/form-data">
     <ul>
         <li>
@@ -13,8 +13,123 @@
     </ul>
 </form>
 <div class="resultscont">
-    <h3>teat <small>A new submoudle</small>  </h3>
+    <table>
+        <thead>
+            <tr>
 
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <hr>
+                    <h3>1. Input file <small>Check if there is a Shapefile in the zip file</small>  </h3>
+
+                    <div class="stage1result">
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code>The uploaded zip archive contains a valid shapefile and all the required files</code></pre></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="stage1resultcontent">
+                        <div class="my-notify-success">Success</div>
+                        <p>&nbsp;</p>
+                    </div>
+                </td>
+
+            </tr>
+            <tr>
+                <td>
+                    <hr>
+                    <h3>2. Schema Check <small>Check if the file has valid schema and attriubutes</small>  </h3>
+
+                    <div class="stage2result">
+                    </div>
+                </td>
+                <td>
+                    <div class="stage2resultcontent">
+                        <div class="my-notify-warning">Warnings </div>
+                    </div>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td>
+                    <hr>
+                    <h3>3. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
+
+                    <div class="stage3result">
+                    </div>
+                </td>
+                <td>
+                    <div class="stage3resultcontent">
+                        <div class="my-notify-error"> Errors</div>
+                    </div>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td>
+                    <hr>
+                    <h3>4. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
+
+                    <div class="stage4result">
+                    </div>
+                </td>
+                <td>
+                    <div class="stage4resultcontent">
+                        <div class="my-notify-success"> Success </div>
+                    </div>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td>
+                    <hr>
+                    <h3>5. File Statistics and performance  <small>File performance summary </small>  </h3>
+
+                    <div class="stage5result">
+                    </div>
+                </td>
+                <td>
+                    <div class="stage5resultcontent">
+                        <div class="my-notify-warning"> Warning </div>
+                    </div>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td>
+                    <hr>
+                    <h3>6. Output GeoJSON </h3>
+
+                    <div class="stage6result">
+                        <p class="stageresultdetails">Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in Geodesign Hub</p>
+                        <button class="turquoise-flat-button download" id="upload-file-btn" type="button">Download GeoJSON</button>
+
+                    </div>
+                </td>
+                <td>
+                    <div class="stage6resultcontent">
+                        <div class="my-notify-success"> Success </div>
+                    </div>
+                </td>
+
+            </tr>
+
+        </tbody>
+    </table>
+
+
+    <!--<div class="my-notify-info">This is info text</div>
+    <div class="my-notify-success">This is success text</div>
+    <div class="my-notify-warning">This is warning text</div>
+    <div class="my-notify-error">This is error text</div>-->
 </div>
 {% endblock %} {% block footer %}
 <script type="text/javascript">
@@ -40,6 +155,10 @@
 
             });
         });
+    });
+    $(".resultdetails").hide();
+    $(".stageresultcontrol").click(function() {
+        $(".resultdetails").toggle();
     });
 </script>
 {% endblock %}
