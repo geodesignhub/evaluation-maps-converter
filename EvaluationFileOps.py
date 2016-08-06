@@ -15,8 +15,10 @@ import functools
 import itertools
 
 class ShapefileHelper():
-	def __init__(self):
+	def __init__(self,opstatus):
 		self.logger = logging.getLogger("evals logger")
+		self.opstatus = opstatus
+		
 
 	def get_output_fname(self,fname, new_suffix, destdirectory= None):
 		path = os.path.basename(fname)
@@ -154,13 +156,14 @@ class ShapefileHelper():
 
 class FileOperations():
 
-    def __init__(self, SOURCE_FILE_SHARE, OUTPUT_SHARE, WORKING_SHARE):
+    def __init__(self, SOURCE_FILE_SHARE, OUTPUT_SHARE, WORKING_SHARE, opstatus):
 		self.SOURCE_FILE_SHARE = SOURCE_FILE_SHARE
 		self.WORKING_SHARE = WORKING_SHARE
 		self.OUTPUT_SHARE = OUTPUT_SHARE
 		self.logger = logging.getLogger("evals logger")
 		self.myShpFileHelper = ShapefileHelper()
 		self.myShapeFactory = ShapelyHelper.ShapesFactory()
+		self.opstatus = opstatus
 
 
     def reprojectFile(self, filepath):

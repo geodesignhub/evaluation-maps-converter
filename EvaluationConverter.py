@@ -47,15 +47,57 @@ def configure_logging(name):
 
 curPath = os.path.dirname(os.path.realpath(__file__))
 
+class OpStatus():
+    def __init__(self):
+        self.stages = {}
+        for i in range(6):
+            x = {'status':0, 'errors':[],'warnings':[], 'info':[], 'debug':[], 'success':[], 'statustext':""}
+            self.stages[i+1] = x
+
+    def add_warning(self, stage, msg):
+        self.stages[stage]['warnings'].add(msg)
+
+    def add_success(self, stage, msg):
+        self.stages[stage]['success'].add(msg)
+        
+    def add_info(self, stage, msg):
+        self.stages[stage]['info'].add(msg)
+
+    def add_debug(self, stage, msg):
+        self.stages[stage]['debug'].add(msg)
+
+    def set_statustext(self, stage, msg):
+        self.stages[stage]['statustext'] = msg
+
+    def set_status(self, stage, status):
+        self.stages[stage]['staus']= status
+
+    def get_allstatuses(self):
+        return json.dumps(self.stages)
+
+
 class ConvertEvaluation():
-    
+    '''
+    There are seven stages to the process 
+    1. Check if Zip file unzips properly
+    2. Check if there is a Shapefile in the zip
+    3. Check if the features and schema is correct
+    4. Reproject the file
+    5. Simplify the file
+    6. Convert to geojson
+    7. Check performance: 
+        - Number of features
+        - Errors in intersection
+        - time required
+
+    '''
     def __init__(self):
         self.SOURCE_FILE_SHARE = os.path.join(curPath, config.inputs['directory'])
         self.WORKING_SHARE = os.path.join(curPath, config.working['directory'])
         # final GEOJSON
         self.OUTPUT_SHARE = os.path.join(curPath, config.geojsonoutput['directory'])
         self.logger = configure_logging('evals logger')
-        self.statuslog = []
+        self.opstatus = OpStatus()
 
     def convert(self):
         

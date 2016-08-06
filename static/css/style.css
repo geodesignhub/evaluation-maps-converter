@@ -64,11 +64,14 @@ a {
 
 .form-style-7 {
     max-width: 400px;
-    margin: 50px auto;
     background: #fff;
     border-radius: 2px;
     padding: 20px;
     font-family: 'Open Sans', sans-serif;
+    margin-top: 20px;
+    margin-right: auto;
+    margin-bottom: 40px;
+    margin-left: auto;
 }
 
 .form-style-7 h1 {
