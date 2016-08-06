@@ -57,7 +57,8 @@ class ShapefileHelper():
 			f.close()
 
 		self.logger.info('file written: %s' % out_fname)
-
+		self.opstatus.set_status(stage=6, status=1, statustext ="File successfully converted to GeoJSON")
+		self.opstatus.add_success(stage=6, msg = "File successfully written")
 		return out_fname
 	def transform_coords(self,func, rec):
 		# Transform record geometry coordinates using the provided function.
@@ -161,82 +162,82 @@ class FileOperations():
 		self.WORKING_SHARE = WORKING_SHARE
 		self.OUTPUT_SHARE = OUTPUT_SHARE
 		self.logger = logging.getLogger("evals logger")
-		self.myShpFileHelper = ShapefileHelper()
-		self.myShapeFactory = ShapelyHelper.ShapesFactory()
 		self.opstatus = opstatus
+		self.myShpFileHelper = ShapefileHelper(self.opstatus)
+		self.myShapeFactory = ShapelyHelper.ShapesFactory()
 
 
     def reprojectFile(self, filepath):
         with fiona.open(filepath) as allfeats:
-            # get the schema
-            schema = allfeats.schema
-            # get the crs
-            crs = allfeats.crs
-            # check if there is a areatype 
-            self.logger.info("File read, validating schema and features..")
-            schemavalidates = self.myShpFileHelper.validateSchema(schema)    
-            featuresvalidate = self.myShpFileHelper.validateFeatures(allfeats)
+			# get the schema
+			schema = allfeats.schema
+			# get the crs
+			crs = allfeats.crs
+			self.logger.info("Checking projection..")
+			self.opstatus.add_info(stage=4, msg = "Checking projection..")
+			try:
+				reprojected_fname = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
+			except Exception as e:
+				self.opstatus.set_status(stage=4, status=0, statustext ="Problem with file reprojection")
+				self.opstatus.add_error(stage=4, msg = "Problems with file reprojection. ")
 
-            try: 
-                assert schemavalidates
-                self.logger.info("Schema OK..")
-            except AssertionError as e:
-                self.logger.error("Input Shapefile does not have a areatype attribute.")
-                sys.exit(1)
-            try: 
-                assert featuresvalidate
-                self.logger.info("Features OK..")
-            except AssertionError as e: 
-                self.logger.error("Features in a shapefile must have allowed areatype attributes")
-                sys.exit(1)
+			else:
+				self.opstatus.set_status(stage=4, status=1, statustext ="File reprojected successfully")
+				self.opstatus.add_success(stage=4, msg = "File reprojected successfully")
 
-            self.logger.info("Checking projection..")
-            
-            reprojected_fname = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
-            self.logger.info("File reprojected as %s .." % reprojected_fname)
-
+			self.logger.info("File reprojected as %s .." % reprojected_fname)
+			self.opstatus.add_info(stage=4, msg = "File reprojected successfully.")
+			
         return reprojected_fname
         
     def simplifyReprojectedFile(self, reprojectedfilepath):    
         # simplify reprojected file
         with fiona.open(reprojectedfilepath) as allfeats:
-            crs = allfeats.crs
-            bounds = allfeats.bounds
-            simplification = {'highest': 0.1,'high': 0.05, 'medium':0.01, 'low':0.0005, 'default':0.005,'none':0}
-            # simplify the file
-            allGeoms = []
-            errorCounter = 0
-            # Define a polygon feature geometry with one attribute
-            polygonschema = {
-                'geometry': 'Polygon',
-                'properties': {'areatype':'str'}
-            }
-            simplificationlevel = simplification[config.simplificationlevel]
-            self.logger.info("Simplifying with simplification level : %s " % config.simplificationlevel)
-            
-            for curFeat in allfeats:
-                s = self.myShapeFactory.genFeature(curFeat['geometry'])
-                if s:
-                    allGeoms.append({'shp':s, 'areatype':curFeat['properties']['areatype']})
+			crs = allfeats.crs
+			bounds = allfeats.bounds
+			simplification = {'highest': 0.1,'high': 0.05, 'medium':0.01, 'low':0.0005, 'default':0.005,'none':0}
+			# simplify the file
+			allGeoms = []
+			errorCounter = 0
+			# Define a polygon feature geometry with one attribute
+			polygonschema = {
+			    'geometry': 'Polygon',
+			    'properties': {'areatype':'str'}
+			}
+			simplificationlevel = simplification[config.simplificationlevel]
+			self.logger.info("Simplifying with simplification level : %s " % config.simplificationlevel)
+			self.opstatus.add_info(stage=5, msg = "Simplifying with simplification level : %s " % config.simplificationlevel)
+			for curFeat in allfeats:
+			    s = self.myShapeFactory.genFeature(curFeat['geometry'])
+			    if s:
+			        allGeoms.append({'shp':s, 'areatype':curFeat['properties']['areatype']})
+			simshp = []
 
-            simshp = []
-            
-            for curGeom in allGeoms:
-                try:
-                    assert simplificationlevel != 'none'
-                    shp = curGeom['shp'].simplify(simplificationlevel, preserve_topology=True)
-                except AssertionError as e: 
-                    shp = curGeom['shp']
-                s = {'shp': shp , 'areatype': curGeom['areatype']}
-                simshp.append(s)
-            
-            sims = self.myShpFileHelper.get_output_fname(reprojectedfilepath,'_sim', self.WORKING_SHARE )
-            self.logger.info("Writing simplified shapefile %s.." % sims)
-            with collection(sims, 'w', driver='ESRI Shapefile',crs=crs, schema=polygonschema) as c:
-                ## If there are multiple geometries, put the "for" loop here
-                for curPoly in simshp:
-                    c.write({
-                        'geometry': mapping(curPoly['shp']), 
-                        'properties': {'areatype':curPoly['areatype']}
-                    })
+			for curGeom in allGeoms:
+			    try:
+			        assert simplificationlevel != 'none'
+			        shp = curGeom['shp'].simplify(simplificationlevel, preserve_topology=True)
+			    except AssertionError as e: 
+			        shp = curGeom['shp']
+			    s = {'shp': shp , 'areatype': curGeom['areatype']}
+			    simshp.append(s)
+
+			sims = self.myShpFileHelper.get_output_fname(reprojectedfilepath,'_sim', self.WORKING_SHARE )
+			self.logger.info("Writing simplified shapefile %s.." % sims) 
+			self.opstatus.add_info(stage=5, msg = "Writing simplified shapefile")
+			try:
+				with collection(sims, 'w', driver='ESRI Shapefile',crs=crs, schema=polygonschema) as c:
+					## If there are multiple geometries, put the "for" loop here
+					for curPoly in simshp:
+						c.write({
+							'geometry': mapping(curPoly['shp']), 
+							'properties': {'areatype':curPoly['areatype']}
+						})
+				
+				self.opstatus.set_status(stage=5, status=1, statustext ="Simplifed Shapefile written successfully")
+				self.opstatus.add_success(stage=5, msg = "Simplifed Shapefile written successfully")
+			except Exception as e: 
+				self.opstatus.set_status(stage=5, status=0, statustext ="Error in writing simplified shapefile")
+				self.opstatus.add_error(stage=5, msg = "Error in writing simplified shapefile" %e)
+
         return sims, bounds

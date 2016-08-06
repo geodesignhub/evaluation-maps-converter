@@ -66,8 +66,9 @@ def upload_file():
             op['msg']="File Uploaded successfully"
             
             myEvalConverter = EvaluationConverter.ConvertEvaluation()
-            gj = myEvalConverter.convert()
+            gj, status = myEvalConverter.convert()
             op['gj'] = gj
+            op['status'] = status
             myEvalConverter.cleanDirectories()
 
     return Response(json.dumps(op), status=200, mimetype='application/json')

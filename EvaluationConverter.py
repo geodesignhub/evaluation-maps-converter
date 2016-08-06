@@ -10,6 +10,7 @@ if speedups.available:
         speedups.enable()   
 
 import fiona 
+import time
 import shutil
 from fiona.crs import to_string
 import  json, geojson
@@ -48,29 +49,36 @@ def configure_logging(name):
 curPath = os.path.dirname(os.path.realpath(__file__))
 
 class OpStatus():
+    
     def __init__(self):
         self.stages = {}
-        for i in range(6):
+        for i in range(1,8):
             x = {'status':0, 'errors':[],'warnings':[], 'info':[], 'debug':[], 'success':[], 'statustext':""}
-            self.stages[i+1] = x
-
+            self.stages[i] = x
+        self.current_milli_time = lambda: int(round(time.time() * 1000))
+    
     def add_warning(self, stage, msg):
-        self.stages[stage]['warnings'].add(msg)
+        
+        self.stages[stage]['warnings'].append({'msg':msg,'time':self.current_milli_time()})
 
     def add_success(self, stage, msg):
-        self.stages[stage]['success'].add(msg)
+        self.stages[stage]['success'].append({'msg':msg,'time':self.current_milli_time()})
+        
+    def add_error(self, stage, msg):
+        self.stages[stage]['errors'].append({'msg':msg,'time':self.current_milli_time()})
         
     def add_info(self, stage, msg):
-        self.stages[stage]['info'].add(msg)
+        self.stages[stage]['info'].append({'msg':msg,'time':self.current_milli_time()})
 
     def add_debug(self, stage, msg):
-        self.stages[stage]['debug'].add(msg)
+        self.stages[stage]['debug'].append({'msg':msg,'time':self.current_milli_time()})
 
     def set_statustext(self, stage, msg):
         self.stages[stage]['statustext'] = msg
 
-    def set_status(self, stage, status):
-        self.stages[stage]['staus']= status
+    def set_status(self, stage, status, statustext):
+        self.stages[stage]['status']= status
+        self.stages[stage]['statustext']= statustext
 
     def get_allstatuses(self):
         return json.dumps(self.stages)
@@ -90,6 +98,11 @@ class ConvertEvaluation():
         - Errors in intersection
         - time required
 
+    Status: 
+    0 - Error / Failed
+    1 - Success /OK
+    2 - Warnings
+
     '''
     def __init__(self):
         self.SOURCE_FILE_SHARE = os.path.join(curPath, config.inputs['directory'])
@@ -100,9 +113,8 @@ class ConvertEvaluation():
         self.opstatus = OpStatus()
 
     def convert(self):
-        
         self.logger.info("Geodesign Hub Evaluations Converter")    
-        myShpFileHelper = EvaluationFileOps.ShapefileHelper()
+        myShpFileHelper = EvaluationFileOps.ShapefileHelper(self.opstatus)
         self.logger.info("Reading source files.. ")
         curPath = os.path.dirname(os.path.realpath(__file__))
         allBounds = []
@@ -116,15 +128,29 @@ class ConvertEvaluation():
             self.logger.error("Source file directory does not exist, please check config.py for correct filename and directory")
 
         zipfiles = [f1 for f1 in listdir(self.SOURCE_FILE_SHARE) if (os.path.splitext(f1)[1] == '.zip')]
+        ferror = False
         for z in zipfiles:
-            zip_ref = zipfile.ZipFile(os.path.join(self.SOURCE_FILE_SHARE,z), 'r')
-            zip_ref.extractall(self.SOURCE_FILE_SHARE)
-            zip_ref.close()
+            try:
+                zip_ref = zipfile.ZipFile(os.path.join(self.SOURCE_FILE_SHARE,z), 'r')
+                zip_ref.extractall(self.SOURCE_FILE_SHARE)
+                zip_ref.close()
+            except Exception as e:
+                ferror = True
+                self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading Zip file contents.")
+                self.opstatus.add_error(stage=1, msg = "Problems with your zip file, please make sure that it is not curropt.")
 
+        if not ferror: 
+            self.opstatus.set_status(stage=1, status=1, statustext ="Zip file read without problems")
+            self.opstatus.add_success(stage=1, msg = "File contents have been unzipped.")
+        
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
-        myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE)
+        myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
         if inputfiles:
+            
+            self.logger.warning("Incorrect zip file")
+            self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile found in the archive")
+            self.opstatus.add_success(stage=2, msg = "Shapefile extracted and reading contents")
             for f in inputfiles:
                 filepath = os.path.join(self.SOURCE_FILE_SHARE, f)
                 # validate features and schema
@@ -135,23 +161,39 @@ class ConvertEvaluation():
                     
                     try: 
                         assert schemavalidates
-                        
                         self.logger.info("Every feature has a areatype attribute")
+                        self.opstatus.add_info(stage=3, msg = "Every feature has a areatype attribute")
                     except AssertionError as e:
                         self.logger.error("Input Shapefile does not have a areatype attribute")
+                        self.opstatus.add_error(stage=3, msg = "Input Shapefile does not have a areatype attribute")
+                        
                         sys.exit(1)
                     try: 
                         assert featuresvalidate
                         self.logger.info("Every feature as the correct areatype")
+                        self.opstatus.add_info(stage=3, msg = "Every feature as the correct areatype value")
                     except AssertionError as e: 
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
+                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column")
                         sys.exit(1)
+
+                if schemavalidates and featuresvalidate:
+                        self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the  areatype column and correct values in the attribtute table.")
+                        self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute tabl")
+                else:
+                    self.opstatus.set_status(stage=3, status=0, statustext ="Areatype attribute not present")
+                    self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/.")
                 # Reproject the file. 
                 reprojectedfile = myFileOps.reprojectFile(filepath)
                 simplifiedfile,bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
                 allBounds.append(bounds)
                 # convert to geojson.
-                gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+                try:
+                    gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+                except Exception as e: 
+                    self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
+                    self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
+
                 with open(gjFile,'r') as gj:
                     allGJ[f] = json.loads(gj.read())
 
@@ -181,6 +223,8 @@ class ConvertEvaluation():
             # read the evaluations
             for fname in evalPaths:
                 self.logger.debug("Currently processsing: %s" % fname)
+                self.opstatus.add_info(stage=7, msg = "Currently processsing: %s" % fname)
+
                 evalFPath = os.path.join(self.WORKING_SHARE, fname)
                 cacheKey = os.path.basename(evalFPath)
                 
@@ -199,12 +243,16 @@ class ConvertEvaluation():
                         assert curFeature['properties']['areatype']
                     except AssertionError as e:
                         self.logger.error("Every evaluation feature must have a areatype attribute")
+                        self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
+                        self.opstatus.add_error(stage=7, msg = "Every evaluation feature must have a areatype attribute")
                         sys.exit(1)
 
                     try:
                         assert curFeature['properties']['areatype'] in ['constraints','red2', 'red', 'yellow', 'green', 'green2','green3']
                     except AssertionError as e:
                         self.logger.error("Areatype must be one of valid, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
+                        self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
+                        self.opstatus.add_error(stage=7, msg = "Areatype must be one of valid allowed values, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
                         sys.exit(1)
                         
                     areatype = curFeature['properties']['areatype']
@@ -214,8 +262,11 @@ class ConvertEvaluation():
                     colorDict[areatype].append(shp) 
                     
                 self.logger.info("Exceptions in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+                self.opstatus.add_info(stage=7, msg = "Exceptions in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
             
                 # self.logger.debug(len(colorDict['red2']), len(colorDict['red']), len(colorDict['yellow']), len(colorDict['green']),len(colorDict['green2']),len(colorDict['green3']),len(colorDict['constraints']))
+                x = "Processed " + str(len(colorDict['red2'])) + " Red2, "+  str(len(colorDict['red']))+ " Red, "+ str(len(colorDict['yellow']))+ " Yellow, "+ str(len(colorDict['green']))+ " Yellow, "+str(len(colorDict['green2']))+ " Yellow, "+str(len(colorDict['green3']))+ " Green3 features."
+                self.opstatus.set_statustext(stage=7, msg = x)
 
                 import time
                 start_time = time.time()
@@ -228,6 +279,8 @@ class ConvertEvaluation():
                         s[curCacheKey] = u
                 s.commit()
                 self.logger.debug("--- %.4f seconds ---" % float(time.time() - start_time))
+                self.opstatus.add_info(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
+
                 # -- write to union json file
                 for k in colorDict.iterkeys():
                     curCacheKey = cacheKey+ '-' + k
@@ -250,6 +303,8 @@ class ConvertEvaluation():
                 for k in colorDict.iterkeys():
                     curCacheKey = cacheKey+ '-' + k
                     self.logger.debug("%s intersection starts" % k)
+                    
+                    self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)
                     fname = k + '-intersect.json'
                     o = os.path.join(self.OUTPUT_SHARE, fname)
                     try:
@@ -262,10 +317,15 @@ class ConvertEvaluation():
                             json.dump( myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k), outFile)
                     else: 
                         self.logger.info("No %s features in input evaluation." % k)
+                        self.opstatus.add_info(stage=7, msg = "No %s features in input evaluation." % k)
+            
+            self.opstatus.set_status(stage=7, status=1, statustext ="Evaluation perforamance successfully tested.")
         else:
             self.logger.warning("Incorrect zip file")
+            self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
+            self.opstatus.add_error(stage=2, msg = "Please ensure that all Shapefiles are in the root directory, the current file does not have it in the root.")
 
-        return allGJ
+        return allGJ , self.opstatus.get_allstatuses()
 
     def cleanDirectories(self):
         dirs = [self.WORKING_SHARE, self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE]

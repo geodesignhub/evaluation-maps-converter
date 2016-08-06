@@ -1,19 +1,33 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">A utility to analyze and convert a evaluation Shapefile to a evaluation GeoJSON. Upload your Evaluation Shapefile and review the performance report and based on the results a GeoJSON file can be downloaded.</p>
-<form id="upload-file" class="form-style-7" method="post" enctype="multipart/form-data">
-    <ul>
-        <li>
-            <label for="file">Select a Evaluation Shapefile</label>
-            <input name="file" type="file">
-            <span>All Shapefile contents must be in a .zip file.</span>
-        </li>
-        <li>
-            <button class="turquoise-flat-button" id="upload-file-btn" type="button">Upload Evaluation</button>
-        </li>
-    </ul>
-</form>
-<div class="resultscont">
-    <table>
+<p class="subtitle">A utility to convert a evaluation shapefile to a evaluation GeoJSON. </p>
+<table>
+    <thead>
+    </thead>
+    <tbody>
+        <tr>
+            <td width="50%">
+                <form id="upload-file" class="form-style-7" method="post" enctype="multipart/form-data">
+                    <ul>
+                        <li>
+                            <label for="file">Select a Evaluation Shapefile</label>
+                            <input name="file" type="file">
+                            <span>All Shapefile contents must be in a .zip file.</span>
+                        </li>
+                        <li>
+                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation</button>
+                        </li>
+                    </ul>
+                </form>
+            </td>
+
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div class="opcont">
+    <table id="outputtable">
         <thead>
             <tr>
 
@@ -21,20 +35,47 @@
         </thead>
         <tbody>
             <tr>
+                <td width="50%">
+                    <hr>
+                    <h3>Output GeoJSON </h3>
+
+                    <div class="opresult">
+                        <p class="subtitle">Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in Geodesign Hub</p>
+                        <button class="turquoise-flat-button download" id="upload-file-btn" type="button">Download GeoJSON</button>
+
+                    </div>
+
+                    <div class="opresultcontent">
+                    </div>
+                </td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <h2>Analysis</h2>
+    <table id="performancetable">
+        <thead>
+            <tr>
+
+            </tr>
+        </thead>
+        <tbody>
+
+            <tr>
                 <td>
                     <hr>
-                    <h3>1. Input file <small>Check if there is a Shapefile in the zip file</small>  </h3>
+                    <h3>1. Input File <small>Check if the file can be successfully unzipped</small>  </h3>
 
                     <div class="stage1result">
+                        <p id='stage1statustext'></p>
                         <p class="stageresultcontrol">Show details..</p>
                         <div class="resultdetails codeStyle computerGreen">
-                            <pre><code>The uploaded zip archive contains a valid shapefile and all the required files</code></pre></div>
+                            <pre><code id="stage1msgdetails"></code></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage1resultcontent">
-                        <div class="my-notify-success">Success</div>
-                        <p>&nbsp;</p>
                     </div>
                 </td>
 
@@ -42,30 +83,36 @@
             <tr>
                 <td>
                     <hr>
-                    <h3>2. Schema Check <small>Check if the file has valid schema and attriubutes</small>  </h3>
+                    <h3>2. Unzipped Shapefile <small>Check if there is a Shapefile in the zip file</small>  </h3>
 
                     <div class="stage2result">
+                        <p id='stage2statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage2msgdetails"></code></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage2resultcontent">
-                        <div class="my-notify-warning">Warnings </div>
                     </div>
                 </td>
 
             </tr>
-
             <tr>
                 <td>
                     <hr>
-                    <h3>3. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
+                    <h3>3. Schema Check <small>Check if the file has valid schema and attriubutes</small>  </h3>
 
                     <div class="stage3result">
+                        <p id='stage3statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage3msgdetails"></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage3resultcontent">
-                        <div class="my-notify-error"> Errors</div>
+
                     </div>
                 </td>
 
@@ -74,14 +121,18 @@
             <tr>
                 <td>
                     <hr>
-                    <h3>4. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
+                    <h3>4. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
 
                     <div class="stage4result">
+                        <p id='stage4statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage4msgdetails"></code></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage4resultcontent">
-                        <div class="my-notify-success"> Success </div>
+
                     </div>
                 </td>
 
@@ -90,38 +141,60 @@
             <tr>
                 <td>
                     <hr>
-                    <h3>5. File Statistics and performance  <small>File performance summary </small>  </h3>
+                    <h3>5. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
 
                     <div class="stage5result">
+                        <p id='stage5statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage5msgdetails"></code></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage5resultcontent">
-                        <div class="my-notify-warning"> Warning </div>
+
                     </div>
                 </td>
 
             </tr>
-
             <tr>
                 <td>
                     <hr>
-                    <h3>6. Output GeoJSON </h3>
+                    <h3>6. File Statistics and performance  <small>File performance summary </small>  </h3>
 
                     <div class="stage6result">
-                        <p class="stageresultdetails">Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in Geodesign Hub</p>
-                        <button class="turquoise-flat-button download" id="upload-file-btn" type="button">Download GeoJSON</button>
-
+                        <p id='stage6statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage6msgdetails"></code></pre></div>
                     </div>
                 </td>
                 <td>
                     <div class="stage6resultcontent">
-                        <div class="my-notify-success"> Success </div>
+
                     </div>
                 </td>
 
             </tr>
+            <tr>
+                <td>
+                    <hr>
+                    <h3>7. File Statistics and performance  <small>File performance summary </small>  </h3>
 
+                    <div class="stage7result">
+                        <p id='stage7statustext'></p>
+                        <p class="stageresultcontrol">Show details..</p>
+                        <div class="resultdetails codeStyle computerGreen">
+                            <pre><code id="stage7msgdetails"></code></pre></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="stage7resultcontent">
+
+                    </div>
+                </td>
+
+            </tr>
         </tbody>
     </table>
 
@@ -146,8 +219,8 @@
                 processData: false,
             });
             promise.done(function(data) {
-                console.log('OK');
-                console.log(data);
+                processserverdata(JSON.parse(data.status));
+                console.log(JSON.parse(data.status));
             });
             promise.fail(function(data) {
                 console.log('error');
@@ -160,5 +233,122 @@
     $(".stageresultcontrol").click(function() {
         $(".resultdetails").toggle();
     });
+
+    function generateStatusDiv(status) {
+        switch (status) {
+            case "info":
+                return $('<div />', {
+                    "class": 'my-notify-info',
+                    "text": "Info"
+                });
+
+            case "success":
+                return $('<div />', {
+                    "class": 'my-notify-success',
+                    "text": "Success"
+                });
+            case "warning":
+                return $('<div />', {
+                    "class": 'my-notify-warning',
+                    "text": "Warnings"
+
+                });
+            case "error":
+                return $('<div />', {
+                    "class": 'my-notify-error',
+                    "text": "Errors"
+
+                });
+
+        }
+    }
+
+    function processMessages(msgdata) {
+        function sortByKey(array, key) {
+            return array.sort(function(a, b) {
+                var x = a[key];
+                var y = b[key];
+                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            });
+        }
+        var allMessages = [];
+        var successmsgs = msgdata.success;
+        for (var x1 = 0; x1 < successmsgs.length; x1++) {
+            var cursucessmsg = successmsgs[x1];
+            cursucessmsg['class'] = 'text-success';
+            allMessages.push(cursucessmsg);
+        }
+        var errormsgs = msgdata.errors;
+
+        for (var x2 = 0; x2 < errormsgs.length; x2++) {
+            var curerrormsg = errormsgs[x2];
+            curerrormsg['class'] = 'text-error';
+            allMessages.push(curerrormsg);
+        }
+        var warningmsgs = msgdata.warnings;
+
+        for (var x3 = 0; x3 < warningmsgs.length; x3++) {
+            var curwarningmsg = warningmsgs[x3];
+            curwarningmsg['class'] = 'text-warning';
+            allMessages.push(curwarningmsg);
+        }
+        var debugmsgs = msgdata.debug;
+
+        for (var x4 = 0; x4 < debugmsgs.length; x4++) {
+            var curdebugmsg = debugmsgs[x4];
+            curdebugmsg['class'] = 'text-debug';
+            allMessages.push(curdebugmsg);
+        }
+        var infomsgs = msgdata.info;
+
+        for (var x5 = 0; x5 < debugmsgs.length; x5++) {
+            var curinfomsg = infomsgs[x5];
+            curinfomsg['class'] = 'text-info';
+            allMessages.push(curinfomsg);
+        }
+
+        var am = sortByKey(allMessages, 'time');
+
+        return am;
+
+    }
+
+
+    function processserverdata(sdata) {
+        // loop over stages 
+        for (var stageid in sdata) {
+            var stagedata = sdata[stageid];
+            var stageresult;
+            var textclass;
+            if (stagedata.status === 1) {
+                stageresult = 'success';
+                textclass = 'text-success';
+            } else if (stagedata.status === 2) {
+                stageresult = 'warning';
+                textclass = 'text-warning';
+            } else if (stagedata.status === 0) {
+                stageresult = 'error';
+                textclass = 'text-error';
+            };
+            var h = generateStatusDiv(stageresult);
+            $(".stage" + stageid + "resultcontent").html(h);
+            $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
+            $("#stage" + stageid + "statustext").html(stagedata.statustext);
+            var allmessages = processMessages(stagedata);
+            var msglen = allmessages.length;
+            $("#stage" + stageid + "msgdetails").html("");
+            for (var x = 0; x < msglen; x++) {
+                var curmsg = allmessages[x];
+                var html = '<span class="' + curmsg['class'] + '"> ' + curmsg['msg'] + '</span><br>';
+
+                $("#stage" + stageid + "msgdetails").append(html);
+            }
+
+        }
+        // populate table at every stage 
+
+        // if OK then generate download button and code. 
+
+    }
 </script>
 {% endblock %}
