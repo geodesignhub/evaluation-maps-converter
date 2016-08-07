@@ -324,7 +324,7 @@ class ConvertEvaluation():
                         self.logger.info("No %s features in input evaluation." % k)
                         self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
             
-            if max(timetaken) > 0:
+            if max(timetaken) > 4.0:
                 self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
             else:
                 self.opstatus.set_status(stage=7, status=1)
