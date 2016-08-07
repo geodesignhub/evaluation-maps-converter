@@ -335,8 +335,8 @@ thead {
 
 td,
 th {
-    padding: 15px 5px;
-    display: table-cell;
+    /*padding: 15px 5px;*/
+    padding: 5px;
     text-align: left;
     vertical-align: top;
     border-radius: 2px
@@ -379,7 +379,7 @@ code {
     color: #31708f;
 }
 
-.text.success {
+.text-success {
     color: #3c763d
 }
 
@@ -397,4 +397,16 @@ span.text-info {
 
 span.text-success {
     color: #00FF00;
+}
+
+#footer {
+    font-family: 'Open Sans', sans-serif;
+    display: table;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#footer p {
+    background: #eee;
 }

@@ -117,7 +117,7 @@
                 <tr>
                     <td>
                         <hr>
-                        <h3>4. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
+                        <h3>4. File reprojection <small>Reproject file to EPSG 4326</small>  </h3>
 
                         <div class="stage4result">
                             <p id='stage4statustext'></p>
@@ -137,7 +137,7 @@
                 <tr>
                     <td>
                         <hr>
-                        <h3>5. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
+                        <h3>5. Simplify Features <small>Simplify the file using Douglas-Peuker algorithm</small></h3>
 
                         <div class="stage5result">
                             <p id='stage5statustext'></p>
@@ -156,7 +156,7 @@
                 <tr>
                     <td>
                         <hr>
-                        <h3>6. File Statistics and performance  <small>File performance summary </small>  </h3>
+                        <h3>6. Convert to GeoJSON <small>Write GeoJSON file </small>  </h3>
 
                         <div class="stage6result">
                             <p id='stage6statustext'></p>
@@ -197,6 +197,7 @@
     </div>
 
 </div>
+
 {% endblock %} {% block footer %}
 <script type="text/javascript">
     $(function() {
@@ -323,7 +324,7 @@
         }
         var infomsgs = msgdata.info;
 
-        for (var x5 = 0; x5 < debugmsgs.length; x5++) {
+        for (var x5 = 0; x5 < infomsgs.length; x5++) {
             var curinfomsg = infomsgs[x5];
             curinfomsg['class'] = 'text-info';
             allMessages.push(curinfomsg);
@@ -360,7 +361,6 @@
             $(".stage" + stageid + "resultcontent").html(h);
             $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
             $("#stage" + stageid + "statustext").html(stagedata.statustext);
-
             var allmessages = processMessages(stagedata);
             var msglen = allmessages.length;
             $("#stage" + stageid + "msgdetails").html("");
@@ -372,6 +372,7 @@
             }
 
         }
+
         $("#opcont").show();
         if (dataOK) {
             $("#opresult").html('');
@@ -387,8 +388,8 @@
 
         } else {
             var p = $('<p>', {
-                class: 'subtitle',
-                html: "There are errors in your Shapefile, therefore it could not be converted to GeoJSON, please review the analysis below. ",
+                class: 'subtitle text-error',
+                html: "There are issues with your Shapefile, therefore the output GeoJSON is not available, please review the analysis below and try again.",
             }).appendTo("#opresult");
 
         }

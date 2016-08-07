@@ -4,15 +4,25 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/flatty.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/fa/font-awesome.min.css') }}">
 <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-<div class=page>
-    <h1>Geodesign Hub Evaluation Maps Converter</h1>
-    <div class=metanav>
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<html>
+
+<body>
+    <div class="page">
+        <h1>Geodesign Hub Evaluation Maps Converter</h1>
+        <div class=metanav>
+        </div>
+
+        {% block body %}{% endblock %}
+
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/humane.min.js') }}"></script>
+        {% block footer %} {% endblock %}
 
     </div>
+    <div id="footer">
+        <p>&copy; 2016 <a target="_blank" href="https://www.hrishikeshballal.net/">Hrishikesh Ballal</a>. All code is open source and available on GitHub.</p>
+    </div>
+</body>
 
-    {% block body %}{% endblock %}
-
-    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/humane.min.js') }}"></script>
-    {% block footer %}{% endblock %}
-</div>
+</html>

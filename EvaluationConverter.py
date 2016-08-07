@@ -58,7 +58,6 @@ class OpStatus():
         self.current_milli_time = lambda: int(round(time.time() * 1000))
     
     def add_warning(self, stage, msg):
-        
         self.stages[stage]['warnings'].append({'msg':msg,'time':self.current_milli_time()})
 
     def add_success(self, stage, msg):
@@ -76,9 +75,10 @@ class OpStatus():
     def set_statustext(self, stage, msg):
         self.stages[stage]['statustext'] = msg
 
-    def set_status(self, stage, status, statustext):
+    def set_status(self, stage, status, statustext=None):
         self.stages[stage]['status']= status
-        self.stages[stage]['statustext']= statustext
+        if statustext:
+            self.stages[stage]['statustext']= statustext
 
     def get_allstatuses(self):
         return json.dumps(self.stages)
@@ -141,16 +141,15 @@ class ConvertEvaluation():
 
         if not ferror: 
             self.opstatus.set_status(stage=1, status=1, statustext ="Zip file read without problems")
-            self.opstatus.add_success(stage=1, msg = "File contents have been unzipped.")
+            self.opstatus.add_success(stage=1, msg = "File contents unzipped successfully")
         
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
         if inputfiles:
-            
             self.logger.warning("Incorrect zip file")
-            self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile found in the archive")
-            self.opstatus.add_success(stage=2, msg = "Shapefile extracted and reading contents")
+            self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
+            self.opstatus.add_success(stage=2, msg = "Shapefile extracted successfully and contents read")
             for f in inputfiles:
                 filepath = os.path.join(self.SOURCE_FILE_SHARE, f)
                 # validate features and schema
@@ -171,18 +170,18 @@ class ConvertEvaluation():
                     try: 
                         assert featuresvalidate
                         self.logger.info("Every feature as the correct areatype")
-                        self.opstatus.add_info(stage=3, msg = "Every feature as the correct areatype value")
+                        self.opstatus.add_info(stage=3, msg = "Every feature has the correct areatype value one of: red, yellow, green, green2, green3")
                     except AssertionError as e: 
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
-                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column")
+                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
                         sys.exit(1)
 
                 if schemavalidates and featuresvalidate:
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the  areatype column and correct values in the attribtute table.")
-                        self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute tabl")
+                        self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
                 else:
-                    self.opstatus.set_status(stage=3, status=0, statustext ="Areatype attribute not present")
-                    self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/.")
+                    self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
+                    self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute.")
                 # Reproject the file. 
                 reprojectedfile = myFileOps.reprojectFile(filepath)
                 simplifiedfile,bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
@@ -191,13 +190,14 @@ class ConvertEvaluation():
                 try:
                     gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
                 except Exception as e: 
-                    print e
+                    self.logger.error("Error in converting shapefile to Geojson %s" %e)
                     self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
                     self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
 
                 with open(gjFile,'r') as gj:
                     allGJ[f] = json.loads(gj.read())
-
+            
+            self.logger.info("Starting perfomrance analysis")
 
             myGeomOps = ShapelyHelper.GeomOperations()
             allBounds = myGeomOps.calculateBounds(allBounds)
@@ -210,6 +210,9 @@ class ConvertEvaluation():
 
             featData = {"type":"FeatureCollection", "features":[]}
             myGJHelper = ShapelyHelper.GeoJSONHelper()
+            
+            self.logger.info("Generating random features within the bounds")
+            self.opstatus.add_info(stage=7, msg = "Generating random features within the evaluation feature bounds")
             for i in range(5):
                 x = myGJHelper.genRandom(featureType="Polygon", numberVertices=4, boundingBox= allBounds)
                 f = {"type": "Feature", "properties": {},"geometry":json.loads(geojson.dumps(x))}
@@ -222,6 +225,7 @@ class ConvertEvaluation():
             allPlanPolygons = MultiPolygon([x for x in combinedPlanPolygons if x.geom_type == 'Polygon' and x.is_valid])
             allPlanPolygons = unary_union(allPlanPolygons)
             # read the evaluations
+            timetaken = []
             for fname in evalPaths:
                 self.logger.debug("Currently processsing: %s" % fname)
                 self.opstatus.add_info(stage=7, msg = "Currently processsing: %s" % fname)
@@ -262,12 +266,13 @@ class ConvertEvaluation():
                     shp, errorCounter = myGeomOps.genFeature(curFeature['geometry'], errorCounter)
                     colorDict[areatype].append(shp) 
                     
-                self.logger.info("Exceptions in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
-                self.opstatus.add_info(stage=7, msg = "Exceptions in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+                self.logger.info("Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+                self.opstatus.add_info(stage=7, msg = "Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
             
                 # self.logger.debug(len(colorDict['red2']), len(colorDict['red']), len(colorDict['yellow']), len(colorDict['green']),len(colorDict['green2']),len(colorDict['green3']),len(colorDict['constraints']))
                 x = "Processed " + str(len(colorDict['red2'])) + " Red2, "+  str(len(colorDict['red']))+ " Red, "+ str(len(colorDict['yellow']))+ " Yellow, "+ str(len(colorDict['green']))+ " Yellow, "+str(len(colorDict['green2']))+ " Yellow, "+str(len(colorDict['green3']))+ " Green3 features."
-                self.opstatus.set_statustext(stage=7, msg = x)
+                
+                self.opstatus.add_info(stage=7, msg = x)
 
                 import time
                 start_time = time.time()
@@ -280,8 +285,8 @@ class ConvertEvaluation():
                         s[curCacheKey] = u
                 s.commit()
                 self.logger.debug("--- %.4f seconds ---" % float(time.time() - start_time))
-                self.opstatus.add_info(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
-
+                timetaken.append(float(time.time() - start_time))
+                self.opstatus.set_statustext(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
                 # -- write to union json file
                 for k in colorDict.iterkeys():
                     curCacheKey = cacheKey+ '-' + k
@@ -304,8 +309,7 @@ class ConvertEvaluation():
                 for k in colorDict.iterkeys():
                     curCacheKey = cacheKey+ '-' + k
                     self.logger.debug("%s intersection starts" % k)
-                    
-                    self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)
+                    # self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)
                     fname = k + '-intersect.json'
                     o = os.path.join(self.OUTPUT_SHARE, fname)
                     try:
@@ -318,9 +322,12 @@ class ConvertEvaluation():
                             json.dump( myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k), outFile)
                     else: 
                         self.logger.info("No %s features in input evaluation." % k)
-                        self.opstatus.add_info(stage=7, msg = "No %s features in input evaluation." % k)
+                        self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
             
-            self.opstatus.set_status(stage=7, status=1, statustext ="Evaluation perforamance successfully tested.")
+            if max(timetaken) > 0:
+                self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
+            else:
+                self.opstatus.set_status(stage=7, status=1)
         else:
             self.logger.warning("Incorrect zip file")
             self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")

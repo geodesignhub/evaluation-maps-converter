@@ -79,11 +79,10 @@ class ShapefileHelper():
 		crs = None
 		if not os.path.isfile(shape_fname):
 			self.logger.error('File not found: %s' % shape_fname)
+		self.opstatus.add_info(stage=6, msg = "Rounding coordinates to six decimal precision")
+		
 		with fiona.open(shape_fname) as allfeats:
-			# import pprint
-			# pprint.pprint(c.schema)
 			schema = allfeats.schema
-			
 			validated = self.validateSchema(schema)
 			if validated:
 				precision = 6
@@ -123,6 +122,7 @@ class ShapefileHelper():
 						# g = self.geometry(feat['geometry'], precision=6)
 						feat['geometry'] = g
 						features.append(feat)
+
 		my_layer = {
 		    "type": "FeatureCollection",
 		    "features": features }
@@ -132,9 +132,10 @@ class ShapefileHelper():
 			f.close()
 
 		self.logger.info('file written: %s' % out_fname)
-		self.opstatus.set_status(stage=6, status=1, statustext ="File successfully converted to GeoJSON")
-		self.opstatus.add_success(stage=6, msg = "File successfully written")
+		self.opstatus.set_status(stage=6, status=1, statustext ="File successfully converted to GeoJSON with six decimal precision")
+		self.opstatus.add_success(stage=6, msg = "GeoJSON file successfully written")
 		return out_fname
+
 	def transform_coords(self,func, rec):
 		# Transform record geometry coordinates using the provided function.
 		# Returns a record or None.
@@ -184,11 +185,6 @@ class ShapefileHelper():
 					crs = from_epsg(4326)
 					) as sink:
 				
-				# Do the geoprocessing in a functional style. The transform_coords
-				# function operates on and returns a single record. Its first argument
-				# is a function that transforms a single coordinate pair between two
-				# coordinate reference systems. We'll compose partial functions of 
-				# these two into one function.
 				origproj = Proj(source.crs, preserve_units=True)
 				func = functools.partial(
 					self.transform_coords,
@@ -248,11 +244,14 @@ class FileOperations():
 			schema = allfeats.schema
 			# get the crs
 			crs = allfeats.crs
-			self.logger.info("Checking projection..")
+			self.logger.info("Reprojecting file")
 			self.opstatus.add_info(stage=4, msg = "Checking projection..")
 			try:
+				self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
 				reprojected_fname = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
+				
 			except Exception as e:
+				self.logger.info("Error in reprojecting file %s " % e)
 				self.opstatus.set_status(stage=4, status=0, statustext ="Problem with file reprojection")
 				self.opstatus.add_error(stage=4, msg = "Problems with file reprojection. ")
 
@@ -260,8 +259,7 @@ class FileOperations():
 				self.opstatus.set_status(stage=4, status=1, statustext ="File reprojected successfully")
 				self.opstatus.add_success(stage=4, msg = "File reprojected successfully")
 
-			self.logger.info("File reprojected as %s .." % reprojected_fname)
-			self.opstatus.add_info(stage=4, msg = "File reprojected successfully.")
+			self.logger.info("File reprojected successfully as %s .." % reprojected_fname)
 			
         return reprojected_fname
         
@@ -310,7 +308,7 @@ class FileOperations():
 						})
 				
 				self.opstatus.set_status(stage=5, status=1, statustext ="Simplifed Shapefile written successfully")
-				self.opstatus.add_success(stage=5, msg = "Simplifed Shapefile written successfully")
+				self.opstatus.add_success(stage=5, msg = "Simplifed file written successfully")
 			except Exception as e: 
 				self.opstatus.set_status(stage=5, status=0, statustext ="Error in writing simplified shapefile")
 				self.opstatus.add_error(stage=5, msg = "Error in writing simplified shapefile" %e)
