@@ -24,7 +24,7 @@ def check_auth(username, password):
     password combination is valid. Please change it to one
     suitable for your service.
     """
-    return username == 'uploads' and password == 'secret'
+    return username == 'uploads' and password == 'secretpassword'
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
@@ -47,6 +47,7 @@ def api_root():
     return render_template('home.html')
 
 @app.route('/upload', methods = ['POST'])
+@requires_auth
 def upload_file():
     op = {}
     if request.method == 'POST':

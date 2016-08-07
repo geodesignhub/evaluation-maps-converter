@@ -26,7 +26,7 @@
         </tr>
     </tbody>
 </table>
-<div class="opcont">
+<div id="opcont">
     <table id="outputtable">
         <thead>
             <tr>
@@ -44,189 +44,210 @@
                         <button class="turquoise-flat-button download" id="upload-file-btn" type="button">Download GeoJSON</button>
 
                     </div>
-
-                    <div class="opresultcontent">
-                    </div>
                 </td>
                 <td></td>
             </tr>
         </tbody>
     </table>
     <br>
-    <h2>Analysis</h2>
-    <table id="performancetable">
-        <thead>
-            <tr>
+    <div id="performanceoutput">
+        <h2>Analysis</h2>
+        <table id="performancetable">
+            <thead>
+                <tr>
 
-            </tr>
-        </thead>
-        <tbody>
+                </tr>
+            </thead>
+            <tbody>
 
-            <tr>
-                <td>
-                    <hr>
-                    <h3>1. Input File <small>Check if the file can be successfully unzipped</small>  </h3>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>1. Input File <small>Check if the file can be successfully unzipped</small>  </h3>
 
-                    <div class="stage1result">
-                        <p id='stage1statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage1msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage1resultcontent">
-                    </div>
-                </td>
+                        <div class="stage1result">
+                            <p id='stage1statustext'></p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage1msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage1resultcontent">
+                        </div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td>
-                    <hr>
-                    <h3>2. Unzipped Shapefile <small>Check if there is a Shapefile in the zip file</small>  </h3>
+                </tr>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>2. Unzipped Shapefile <small>Check if there is a Shapefile in the zip file</small>  </h3>
 
-                    <div class="stage2result">
-                        <p id='stage2statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage2msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage2resultcontent">
-                    </div>
-                </td>
+                        <div class="stage2result">
+                            <p id='stage2statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage2msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage2resultcontent">
+                        </div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td>
-                    <hr>
-                    <h3>3. Schema Check <small>Check if the file has valid schema and attriubutes</small>  </h3>
+                </tr>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>3. Schema Check <small>Check if the file has valid schema and attriubutes</small>  </h3>
 
-                    <div class="stage3result">
-                        <p id='stage3statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage3msgdetails"></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage3resultcontent">
+                        <div class="stage3result">
+                            <p id='stage3statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage3msgdetails"></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage3resultcontent">
 
-                    </div>
-                </td>
+                        </div>
+                    </td>
 
-            </tr>
+                </tr>
 
-            <tr>
-                <td>
-                    <hr>
-                    <h3>4. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>4. File simplification <small>Simplify the file using Douglas-Peuker algorithm</small>  </h3>
 
-                    <div class="stage4result">
-                        <p id='stage4statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage4msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage4resultcontent">
+                        <div class="stage4result">
+                            <p id='stage4statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage4msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage4resultcontent">
 
-                    </div>
-                </td>
+                        </div>
+                    </td>
 
-            </tr>
+                </tr>
 
-            <tr>
-                <td>
-                    <hr>
-                    <h3>5. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>5. Reproject to EPSG:4326 <small>Reproject file if necessary</small>  </h3>
 
-                    <div class="stage5result">
-                        <p id='stage5statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage5msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage5resultcontent">
+                        <div class="stage5result">
+                            <p id='stage5statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage5msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage5resultcontent">
 
-                    </div>
-                </td>
+                        </div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td>
-                    <hr>
-                    <h3>6. File Statistics and performance  <small>File performance summary </small>  </h3>
+                </tr>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>6. File Statistics and performance  <small>File performance summary </small>  </h3>
 
-                    <div class="stage6result">
-                        <p id='stage6statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage6msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage6resultcontent">
+                        <div class="stage6result">
+                            <p id='stage6statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage6msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage6resultcontent">
 
-                    </div>
-                </td>
+                        </div>
+                    </td>
 
-            </tr>
-            <tr>
-                <td>
-                    <hr>
-                    <h3>7. File Statistics and performance  <small>File performance summary </small>  </h3>
+                </tr>
+                <tr>
+                    <td>
+                        <hr>
+                        <h3>7. File Statistics and performance  <small>File performance summary </small>  </h3>
 
-                    <div class="stage7result">
-                        <p id='stage7statustext'></p>
-                        <p class="stageresultcontrol">Show details..</p>
-                        <div class="resultdetails codeStyle computerGreen">
-                            <pre><code id="stage7msgdetails"></code></pre></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="stage7resultcontent">
+                        <div class="stage7result">
+                            <p id='stage7statustext'></p>
+                            <p class="stageresultcontrol">Show details..</p>
+                            <div class="resultdetails codeStyle computerGreen">
+                                <pre><code id="stage7msgdetails"></code></pre></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stage7resultcontent">
 
-                    </div>
-                </td>
+                        </div>
+                    </td>
 
-            </tr>
-        </tbody>
-    </table>
+                </tr>
+            </tbody>
+        </table>
 
+    </div>
 
-    <!--<div class="my-notify-info">This is info text</div>
-    <div class="my-notify-success">This is success text</div>
-    <div class="my-notify-warning">This is warning text</div>
-    <div class="my-notify-error">This is error text</div>-->
 </div>
 {% endblock %} {% block footer %}
 <script type="text/javascript">
     $(function() {
+
         $('#upload-file-btn').click(function() {
-            var form_data = new FormData($('#upload-file')[0]);
+            if ($('input[name=file]').get(0).files.length === 0) {
 
-            var promise = $.ajax({
-                type: 'POST',
-                url: '/upload',
-                data: form_data,
-                contentType: false,
-                cache: false,
-                processData: false,
-            });
-            promise.done(function(data) {
-                processserverdata(JSON.parse(data.status));
-                console.log(JSON.parse(data.status));
-            });
-            promise.fail(function(data) {
-                console.log('error');
-                console.log(data.msg);
+                humane.log("No files selected", {
+                    addnCls: 'humane-flatty-error'
+                });
+            } else {
+                var form_data = new FormData($('#upload-file')[0]);
+                var promise = $.ajax({
+                    type: 'POST',
+                    url: '/upload',
+                    username: 'uploads',
+                    password: 'secretpassword',
+                    data: form_data,
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                });
 
-            });
+                humane.log("Uploading file to server..", {
+                    addnCls: 'humane-flatty-info'
+                });
+                promise.done(function(data) {
+
+                    humane.log("Processing received data..", {
+                        addnCls: 'humane-flatty-info'
+                    });
+                    processserverdata(JSON.parse(data.status));
+
+
+                    humane.log("Data Processed..", {
+                        addnCls: 'humane-flatty-success'
+                    });
+                    $("#performanceoutput").show();
+                });
+                promise.fail(function(data) {
+
+                    humane.log("Error in receiving data..", {
+                        addnCls: 'humane-flatty-error'
+                    });
+                    console.log('error');
+                    console.log(data.msg);
+
+                });
+            }
         });
     });
     $(".resultdetails").hide();
@@ -347,8 +368,12 @@
         }
         // populate table at every stage 
 
-        // if OK then generate download button and code. 
+        // if OK then generate download button and code.
+        var outputchecks = flasel
 
     }
+    $("#performanceoutput").hide();
+
+    $("#opcont").hide();
 </script>
 {% endblock %}
