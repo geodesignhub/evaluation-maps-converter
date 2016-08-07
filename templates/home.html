@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">A utility to convert a evaluation shapefile to a evaluation GeoJSON. </p>
+<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance.</p>
 <table>
     <thead>
     </thead>
@@ -37,11 +37,9 @@
             <tr>
                 <td width="50%">
                     <hr>
-                    <h3>Output GeoJSON </h3>
+                    <h3>Output </h3>
 
-                    <div class="opresult">
-                        <p class="subtitle">Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in Geodesign Hub</p>
-                        <button class="turquoise-flat-button download" id="upload-file-btn" type="button">Download GeoJSON</button>
+                    <div id="opresult">
 
                     </div>
                 </td>
@@ -226,12 +224,14 @@
                     addnCls: 'humane-flatty-info'
                 });
                 promise.done(function(data) {
-
                     humane.log("Processing received data..", {
                         addnCls: 'humane-flatty-info'
                     });
                     processserverdata(JSON.parse(data.status));
-
+                    for (var fname in data.gj) {
+                        var curgj = data.gj[fname];
+                        gj = curgj;
+                    }
 
                     humane.log("Data Processed..", {
                         addnCls: 'humane-flatty-success'
@@ -283,6 +283,7 @@
 
         }
     }
+    var gj;
 
     function processMessages(msgdata) {
         function sortByKey(array, key) {
@@ -337,6 +338,8 @@
 
     function processserverdata(sdata) {
         // loop over stages 
+        var dataOK = true;
+
         for (var stageid in sdata) {
             var stagedata = sdata[stageid];
             var stageresult;
@@ -347,14 +350,17 @@
             } else if (stagedata.status === 2) {
                 stageresult = 'warning';
                 textclass = 'text-warning';
+                dataOK = false;
             } else if (stagedata.status === 0) {
                 stageresult = 'error';
                 textclass = 'text-error';
+                dataOK = false;
             };
             var h = generateStatusDiv(stageresult);
             $(".stage" + stageid + "resultcontent").html(h);
             $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
             $("#stage" + stageid + "statustext").html(stagedata.statustext);
+
             var allmessages = processMessages(stagedata);
             var msglen = allmessages.length;
             $("#stage" + stageid + "msgdetails").html("");
@@ -366,14 +372,39 @@
             }
 
         }
-        // populate table at every stage 
+        $("#opcont").show();
+        if (dataOK) {
+            $("#opresult").html('');
+            // show the download button
+            var p = $('<p>', {
+                class: 'subtitle',
+                html: "Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in Geodesign Hub",
+            }).appendTo("#opresult");
+            var p = $('<div>', {
+                class: 'subtitle',
+                html: "<br><button class='turquoise-flat-button download' id='upload-file-btn' onclick='downloadGJ()' type='button'>Download GeoJSON</button>",
+            }).appendTo("#opresult");
 
-        // if OK then generate download button and code.
-        var outputchecks = flasel
+        } else {
+            var p = $('<p>', {
+                class: 'subtitle',
+                html: "There are errors in your Shapefile, therefore it could not be converted to GeoJSON, please review the analysis below. ",
+            }).appendTo("#opresult");
+
+        }
+
+    }
+
+    function downloadGJ() {
+        var hiddenElement = document.createElement('a');
+
+        hiddenElement.href = 'data:attachment/text,' + encodeURI(JSON.stringify(gj));
+        hiddenElement.target = '_blank';
+        hiddenElement.download = 'evaluation.geojson';
+        hiddenElement.click();
 
     }
     $("#performanceoutput").hide();
-
     $("#opcont").hide();
 </script>
 {% endblock %}

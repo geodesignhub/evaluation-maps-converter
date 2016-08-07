@@ -13,12 +13,53 @@ import ShapelyHelper
 from fiona import collection
 import functools
 import itertools
+# import numpy as np
 
 class ShapefileHelper():
 	def __init__(self,opstatus):
 		self.logger = logging.getLogger("evals logger")
 		self.opstatus = opstatus
 		
+
+	# def _round(self,pt, precision):
+	# 	try:
+	# 		return round(pt[0], precision), round(pt[1], precision)
+
+	# 	except TypeError:
+	# 		pt = list(pt)
+	# 		return round(pt[0], precision), round(pt[1], precision)
+
+
+	# def round_ring(self,ring, precision):
+	# 	return [self._round(tuple(pt), precision) for pt in ring]
+
+
+	# def geometry(self,geom, precision):
+	# 	g = dict(geom.items())
+
+	# 	if geom['type'] == 'GeometryCollection':
+	# 		g['geometries'] = [self.geometry(x, precision) for x in geom['geometries']]
+	# 		return g
+
+	# 	try:
+	# 		c = np.array(geom['coordinates'])
+	# 		g['coordinates'] = np.round(c, precision)
+
+	# 	except (AttributeError, KeyError, TypeError, NameError):
+
+	# 		if geom['type'] == 'Point':
+	# 			g['coordinates'] = self._round(geom['coordinates'], precision)
+
+	# 		elif geom['type'] in ('MultiPoint', 'LineString'):
+	# 			g['coordinates'] = self.round_ring(geom['coordinates'], precision)
+
+	# 		elif geom['type'] in ('MultiLineString', 'Polygon'):
+	# 			g['coordinates'] = [self.round_ring(r, precision) for r in geom['coordinates']]
+
+	# 		elif geom['type'] == 'MultiPolygon':
+	# 			g['coordinates'] = [[self.round_ring(r, precision) for r in rings] for rings in geom['coordinates']]
+
+	# 	return g
 
 	def get_output_fname(self,fname, new_suffix, destdirectory= None):
 		path = os.path.basename(fname)
@@ -45,9 +86,43 @@ class ShapefileHelper():
 			
 			validated = self.validateSchema(schema)
 			if validated:
-			    for feat in allfeats:
-			    	if 'areatype' in feat['properties'].keys():
-			    		features.append(feat)
+				precision = 6
+				for feat in allfeats:
+					g = feat['geometry']
+					if g['type'] == 'Point':
+						x, y = g['coordinates']
+						x = round(x, precision)
+						y = round(y, precision)
+						new_coords = [x, y]
+					elif g['type'] in ['LineString', 'MultiPoint']:
+						xp, yp = zip(*g['coordinates'])
+						xp = [round(v, precision) for v in xp]
+						yp = [round(v, precision) for v in yp]
+						new_coords = list(zip(xp, yp))
+					elif g['type'] in ['Polygon', 'MultiLineString']:
+						new_coords = []
+						for piece in g['coordinates']:
+							xp, yp = zip(*piece)
+							xp = [round(v, precision) for v in xp]
+							yp = [round(v, precision) for v in yp]
+							new_coords.append(list(zip(xp, yp)))
+					elif g['type'] == 'MultiPolygon':
+						parts = g['coordinates']
+						new_coords = []
+						for part in parts:
+							inner_coords = []
+							for ring in part:
+								xp, yp = zip(*ring)
+								xp = [round(v, precision) for v in xp]
+								yp = [round(v, precision) for v in yp]
+								inner_coords.append(list(zip(xp, yp)))
+							new_coords.append(inner_coords)
+					g['coordinates'] = new_coords
+
+					if 'areatype' in feat['properties'].keys():
+						# g = self.geometry(feat['geometry'], precision=6)
+						feat['geometry'] = g
+						features.append(feat)
 		my_layer = {
 		    "type": "FeatureCollection",
 		    "features": features }
@@ -195,7 +270,7 @@ class FileOperations():
         with fiona.open(reprojectedfilepath) as allfeats:
 			crs = allfeats.crs
 			bounds = allfeats.bounds
-			simplification = {'highest': 0.1,'high': 0.05, 'medium':0.01, 'low':0.0005, 'default':0.005,'none':0}
+			simplification = {'highest': 0.1,'high': 0.05, 'medium':0.01, 'low':0.001, 'default':0.005,'none':0}
 			# simplify the file
 			allGeoms = []
 			errorCounter = 0

@@ -191,6 +191,7 @@ class ConvertEvaluation():
                 try:
                     gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
                 except Exception as e: 
+                    print e
                     self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
                     self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
 
