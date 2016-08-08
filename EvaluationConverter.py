@@ -166,7 +166,7 @@ class ConvertEvaluation():
                         self.logger.error("Input Shapefile does not have a areatype attribute")
                         self.opstatus.add_error(stage=3, msg = "Input Shapefile does not have a areatype attribute")
                         
-                        sys.exit(1)
+                        # sys.exit(1)
                     try: 
                         assert featuresvalidate
                         self.logger.info("Every feature as the correct areatype")
@@ -174,7 +174,7 @@ class ConvertEvaluation():
                     except AssertionError as e: 
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
                         self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
-                        sys.exit(1)
+                        # sys.exit(1)
 
                 if schemavalidates and featuresvalidate:
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the  areatype column and correct values in the attribtute table.")
@@ -183,151 +183,167 @@ class ConvertEvaluation():
                     self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
                     self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute.")
                 # Reproject the file. 
-                reprojectedfile = myFileOps.reprojectFile(filepath)
-                simplifiedfile,bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
-                allBounds.append(bounds)
-                # convert to geojson.
-                try:
-                    gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
-                except Exception as e: 
-                    self.logger.error("Error in converting shapefile to Geojson %s" %e)
-                    self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
-                    self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
-
-                with open(gjFile,'r') as gj:
-                    allGJ[f] = json.loads(gj.read())
-            
-            self.logger.info("Starting perfomrance analysis")
-
-            myGeomOps = ShapelyHelper.GeomOperations()
-            allBounds = myGeomOps.calculateBounds(allBounds)
-            allBounds = allBounds.split(',')
-            allBounds = [float(i) for i in allBounds]
-
-            evalulationColors = ['red2','red', 'yellow', 'green', 'green2','green3']
-            evalPaths = [f for f in listdir(self.WORKING_SHARE) if (isfile(join(self.WORKING_SHARE, f)) and (os.path.splitext(f)[1] == '.geojson'))]
-            # generate random features
-
-            featData = {"type":"FeatureCollection", "features":[]}
-            myGJHelper = ShapelyHelper.GeoJSONHelper()
-            
-            self.logger.info("Generating random features within the bounds")
-            self.opstatus.add_info(stage=7, msg = "Generating random features within the evaluation feature bounds")
-            for i in range(5):
-                x = myGJHelper.genRandom(featureType="Polygon", numberVertices=4, boundingBox= allBounds)
-                f = {"type": "Feature", "properties": {},"geometry":json.loads(geojson.dumps(x))}
-                featData['features'].append(f)
-
-            # polygonize the features
-            combinedPlanPolygons = []
-            for feature in featData['features']:
-                combinedPlanPolygons.append(asShape(feature['geometry']))
-            allPlanPolygons = MultiPolygon([x for x in combinedPlanPolygons if x.geom_type == 'Polygon' and x.is_valid])
-            allPlanPolygons = unary_union(allPlanPolygons)
-            # read the evaluations
-            timetaken = []
-            for fname in evalPaths:
-                self.logger.debug("Currently processsing: %s" % fname)
-                self.opstatus.add_info(stage=7, msg = "Currently processsing: %s" % fname)
-
-                evalFPath = os.path.join(self.WORKING_SHARE, fname)
-                cacheKey = os.path.basename(evalFPath)
-                
-                filepath = os.path.join(self.WORKING_SHARE, 'some.db')
-                s = SqliteDict(filepath, autocommit=False)
-                # read the evaluation file
-                with open(evalFPath, 'r') as gjFile:
-                        data = gjFile.read()
-                        evalData = json.loads(data)
-
-                colorDict =  {'red':[],'red2':[], 'yellow':[],'green':[],'green2':[], 'green3':[],'constraints':[]}
-                errorDict =  {'red':0,'red2':0, 'yellow':0,'green':0,'green2':0,'green3':0, 'constraints':0}
-
-                for curFeature in evalData['features']:
+                if schemavalidates and featuresvalidate:
+                    reprojectedfile = myFileOps.reprojectFile(filepath)
+                    simplifiedfile,bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
+                    allBounds.append(bounds)
                     try:
-                        assert curFeature['properties']['areatype']
-                    except AssertionError as e:
-                        self.logger.error("Every evaluation feature must have a areatype attribute")
-                        self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
-                        self.opstatus.add_error(stage=7, msg = "Every evaluation feature must have a areatype attribute")
-                        sys.exit(1)
+                        gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+                    except Exception as e: 
+                        self.logger.error("Error in converting shapefile to Geojson %s" %e)
+                        self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
+                        self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
 
-                    try:
-                        assert curFeature['properties']['areatype'] in ['constraints','red2', 'red', 'yellow', 'green', 'green2','green3']
-                    except AssertionError as e:
-                        self.logger.error("Areatype must be one of valid, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
-                        self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
-                        self.opstatus.add_error(stage=7, msg = "Areatype must be one of valid allowed values, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
-                        sys.exit(1)
-                        
-                    areatype = curFeature['properties']['areatype']
-                    errorCounter = errorDict[areatype]
-
-                    shp, errorCounter = myGeomOps.genFeature(curFeature['geometry'], errorCounter)
-                    colorDict[areatype].append(shp) 
+                    with open(gjFile,'r') as gj:
+                        allGJ[f] = json.loads(gj.read())
+                else: 
                     
-                self.logger.info("Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
-                self.opstatus.add_info(stage=7, msg = "Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
-            
-                # self.logger.debug(len(colorDict['red2']), len(colorDict['red']), len(colorDict['yellow']), len(colorDict['green']),len(colorDict['green2']),len(colorDict['green3']),len(colorDict['constraints']))
-                x = "Processed " + str(len(colorDict['red2'])) + " Red2, "+  str(len(colorDict['red']))+ " Red, "+ str(len(colorDict['yellow']))+ " Yellow, "+ str(len(colorDict['green']))+ " Yellow, "+str(len(colorDict['green2']))+ " Yellow, "+str(len(colorDict['green3']))+ " Green3 features."
+                    self.opstatus.set_status(stage=4, status=0, statustext ="Errors in file attribute table")
+                    self.opstatus.add_error(stage=4, msg = "Check the attribute table for areatype column and correct areatype value.")
+                    self.opstatus.set_status(stage=5, status=0, statustext ="File attribute table does not validate")
+                    self.opstatus.add_error(stage=5, msg = "Check the attribute table for areatype column and correct areatype value")
+                    
+                    self.opstatus.set_status(stage=6, status=0, statustext ="Shapefile not converted to GeoJSON. ")
+                    self.opstatus.add_error(stage=6, msg = "File will not be converted to GeoJSON, see earlier errors")
+                    
+                    self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started")
+                    self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")
+                    # convert to geojson.
+            try:
+                assert schemavalidates and featuresvalidate
+                self.logger.info("Starting perfomrance analysis")
+
+                myGeomOps = ShapelyHelper.GeomOperations()
+                allBounds = myGeomOps.calculateBounds(allBounds)
+                allBounds = allBounds.split(',')
+                allBounds = [float(i) for i in allBounds]
+
+                evalulationColors = ['red2','red', 'yellow', 'green', 'green2','green3']
+                evalPaths = [f for f in listdir(self.WORKING_SHARE) if (isfile(join(self.WORKING_SHARE, f)) and (os.path.splitext(f)[1] == '.geojson'))]
+                # generate random features
+
+                featData = {"type":"FeatureCollection", "features":[]}
+                myGJHelper = ShapelyHelper.GeoJSONHelper()
                 
-                self.opstatus.add_info(stage=7, msg = x)
+                self.logger.info("Generating random features within the bounds")
+                self.opstatus.add_info(stage=7, msg = "Generating random features within the evaluation feature bounds")
+                for i in range(5):
+                    x = myGJHelper.genRandom(featureType="Polygon", numberVertices=4, boundingBox= allBounds)
+                    f = {"type": "Feature", "properties": {},"geometry":json.loads(geojson.dumps(x))}
+                    featData['features'].append(f)
 
-                import time
-                start_time = time.time()
+                # polygonize the features
+                combinedPlanPolygons = []
+                for feature in featData['features']:
+                    combinedPlanPolygons.append(asShape(feature['geometry']))
+                allPlanPolygons = MultiPolygon([x for x in combinedPlanPolygons if x.geom_type == 'Polygon' and x.is_valid])
+                allPlanPolygons = unary_union(allPlanPolygons)
+                # read the evaluations
+                timetaken = []
+                for fname in evalPaths:
+                    self.logger.debug("Currently processsing: %s" % fname)
+                    self.opstatus.add_info(stage=7, msg = "Currently processsing: %s" % fname)
 
-                # create a union and write to SqliteDict this is to test caching performance.   
-                for k in colorDict.iterkeys():
-                    u = myGeomOps.genUnaryUnion(colorList=colorDict[k])
-                    curCacheKey = cacheKey + '-' + k
-                    if curCacheKey not in s.keys() and u:
-                        s[curCacheKey] = u
-                s.commit()
-                self.logger.debug("--- %.4f seconds ---" % float(time.time() - start_time))
-                timetaken.append(float(time.time() - start_time))
-                self.opstatus.set_statustext(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
-                # -- write to union json file
-                for k in colorDict.iterkeys():
-                    curCacheKey = cacheKey+ '-' + k
-                    try:
-                        u = s[curCacheKey]
-                    except KeyError as e: 
-                        u = []
-                    if u:
-                        featureCollectionList = []
-                        allJSON = ShapelyHelper.export_to_JSON(u)
-                        featureCollectionList.append(myGeomOps.constructSingleFeatureDef(allJSON,k))
-                        outputJSON = {}
-                        outputJSON["type"] = "FeatureCollection"
-                        outputJSON["features"]= featureCollectionList
-                        fname = k + '.json'
-                        uf = os.path.join(self.OUTPUT_SHARE, fname)
-                        with open(uf, 'w') as outFile:
-                            json.dump(outputJSON , outFile)
-                # -- write to intersection json file
-                for k in colorDict.iterkeys():
-                    curCacheKey = cacheKey+ '-' + k
-                    self.logger.debug("%s intersection starts" % k)
-                    # self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)
-                    fname = k + '-intersect.json'
-                    o = os.path.join(self.OUTPUT_SHARE, fname)
-                    try:
-                        evalFeats = s[curCacheKey]
-                    except KeyError as e: 
-                        evalFeats = []
+                    evalFPath = os.path.join(self.WORKING_SHARE, fname)
+                    cacheKey = os.path.basename(evalFPath)
+                    
+                    filepath = os.path.join(self.WORKING_SHARE, 'some.db')
+                    s = SqliteDict(filepath, autocommit=False)
+                    # read the evaluation file
+                    with open(evalFPath, 'r') as gjFile:
+                            data = gjFile.read()
+                            evalData = json.loads(data)
 
-                    if evalFeats:
-                        with open(o, 'w') as outFile:
-                            json.dump( myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k), outFile)
-                    else: 
-                        self.logger.info("No %s features in input evaluation." % k)
-                        self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
-            
-            if max(timetaken) > 4.0:
-                self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
-            else:
-                self.opstatus.set_status(stage=7, status=1)
+                    colorDict =  {'red':[],'red2':[], 'yellow':[],'green':[],'green2':[], 'green3':[],'constraints':[]}
+                    errorDict =  {'red':0,'red2':0, 'yellow':0,'green':0,'green2':0,'green3':0, 'constraints':0}
+
+                    for curFeature in evalData['features']:
+                        try:
+                            assert curFeature['properties']['areatype']
+                        except AssertionError as e:
+                            self.logger.error("Every evaluation feature must have a areatype attribute")
+                            self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
+                            self.opstatus.add_error(stage=7, msg = "Every evaluation feature must have a areatype attribute")
+                            # sys.exit(1)
+
+                        try:
+                            assert curFeature['properties']['areatype'] in ['constraints','red2', 'red', 'yellow', 'green', 'green2','green3']
+                        except AssertionError as e:
+                            self.logger.error("Areatype must be one of valid, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
+                            self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
+                            self.opstatus.add_error(stage=7, msg = "Areatype must be one of valid allowed values, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
+                            # sys.exit(1)
+                            
+                        areatype = curFeature['properties']['areatype']
+                        errorCounter = errorDict[areatype]
+
+                        shp, errorCounter = myGeomOps.genFeature(curFeature['geometry'], errorCounter)
+                        colorDict[areatype].append(shp) 
+                        
+                    self.logger.info("Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+                    self.opstatus.add_info(stage=7, msg = "Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+                
+                    # self.logger.debug(len(colorDict['red2']), len(colorDict['red']), len(colorDict['yellow']), len(colorDict['green']),len(colorDict['green2']),len(colorDict['green3']),len(colorDict['constraints']))
+                    x = "Processed " + str(len(colorDict['red2'])) + " Red2, "+  str(len(colorDict['red']))+ " Red, "+ str(len(colorDict['yellow']))+ " Yellow, "+ str(len(colorDict['green']))+ " Yellow, "+str(len(colorDict['green2']))+ " Yellow, "+str(len(colorDict['green3']))+ " Green3 features."
+                    
+                    self.opstatus.add_info(stage=7, msg = x)
+
+                    import time
+                    start_time = time.time()
+
+                    # create a union and write to SqliteDict this is to test caching performance.   
+                    for k in colorDict.iterkeys():
+                        u = myGeomOps.genUnaryUnion(colorList=colorDict[k])
+                        curCacheKey = cacheKey + '-' + k
+                        if curCacheKey not in s.keys() and u:
+                            s[curCacheKey] = u
+                    s.commit()
+                    self.logger.debug("--- %.4f seconds ---" % float(time.time() - start_time))
+                    timetaken.append(float(time.time() - start_time))
+                    self.opstatus.set_statustext(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
+                    # -- write to union json file
+                    for k in colorDict.iterkeys():
+                        curCacheKey = cacheKey+ '-' + k
+                        try:
+                            u = s[curCacheKey]
+                        except KeyError as e: 
+                            u = []
+                        if u:
+                            featureCollectionList = []
+                            allJSON = ShapelyHelper.export_to_JSON(u)
+                            featureCollectionList.append(myGeomOps.constructSingleFeatureDef(allJSON,k))
+                            outputJSON = {}
+                            outputJSON["type"] = "FeatureCollection"
+                            outputJSON["features"]= featureCollectionList
+                            fname = k + '.json'
+                            uf = os.path.join(self.OUTPUT_SHARE, fname)
+                            with open(uf, 'w') as outFile:
+                                json.dump(outputJSON , outFile)
+                    # -- write to intersection json file
+                    for k in colorDict.iterkeys():
+                        curCacheKey = cacheKey+ '-' + k
+                        self.logger.debug("%s intersection starts" % k)
+                        # self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)
+                        fname = k + '-intersect.json'
+                        o = os.path.join(self.OUTPUT_SHARE, fname)
+                        try:
+                            evalFeats = s[curCacheKey]
+                        except KeyError as e: 
+                            evalFeats = []
+
+                        if evalFeats:
+                            with open(o, 'w') as outFile:
+                                json.dump( myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k), outFile)
+                        else: 
+                            self.logger.info("No %s features in input evaluation." % k)
+                            self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
+                
+                if max(timetaken) > 4.0:
+                    self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
+                else:
+                    self.opstatus.set_status(stage=7, status=1)
+            except AssertionError as ae:
+                   self.opstatus.set_status(stage=7, status=0)
         else:
             self.logger.warning("Incorrect zip file")
             self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
