@@ -160,7 +160,7 @@ class ConvertEvaluation():
                     
                     try: 
                         assert schemavalidates
-                        self.logger.info("Every feature has a areatype attribute")
+                        self.logger.info("Every feature is a polygon")
                         self.opstatus.add_info(stage=3, msg = "Every feature has a areatype attribute")
                     except AssertionError as e:
                         self.logger.error("Input Shapefile does not have a areatype attribute")
@@ -198,15 +198,15 @@ class ConvertEvaluation():
                         allGJ[f] = json.loads(gj.read())
                 else: 
                     
-                    self.opstatus.set_status(stage=4, status=0, statustext ="Errors in file attribute table")
+                    self.opstatus.set_status(stage=4, status=0, statustext ="There are errors in file attribute table, reprojection not started")
                     self.opstatus.add_error(stage=4, msg = "Check the attribute table for areatype column and correct areatype value.")
-                    self.opstatus.set_status(stage=5, status=0, statustext ="File attribute table does not validate")
+                    self.opstatus.set_status(stage=5, status=0, statustext ="File attribute table does not validate, therefore will not simplify")
                     self.opstatus.add_error(stage=5, msg = "Check the attribute table for areatype column and correct areatype value")
                     
                     self.opstatus.set_status(stage=6, status=0, statustext ="Shapefile not converted to GeoJSON. ")
                     self.opstatus.add_error(stage=6, msg = "File will not be converted to GeoJSON, see earlier errors")
                     
-                    self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started")
+                    self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started, please upload the correct file")
                     self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")
                     # convert to geojson.
             try:
