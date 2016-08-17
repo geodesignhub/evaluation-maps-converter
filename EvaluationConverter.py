@@ -330,16 +330,24 @@ class ConvertEvaluation():
                             evalFeats = s[curCacheKey]
                         except KeyError as e: 
                             evalFeats = []
-
                         if evalFeats:
                             with open(o, 'w') as outFile:
-                                json.dump( myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k), outFile)
+                                op, success = myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k)
+                                print success
+                                json.dump( op, outFile)
+                            if success:
+                                pass
+                            else:
+                                geometryerror =1
+                                
                         else: 
                             self.logger.info("No %s features in input evaluation." % k)
                             self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
                 
                 if max(timetaken) > 4.0:
                     self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
+                elif geometryerror: 
+                    self.opstatus.set_status(stage=7, status=2, statustext= "Your file has topology and geometry errors. Please fix them and try again. ")
                 else:
                     self.opstatus.set_status(stage=7, status=1)
             except AssertionError as ae:

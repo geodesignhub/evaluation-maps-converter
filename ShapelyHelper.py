@@ -62,14 +62,22 @@ class GeomOperations():
 
     def checkIntersection(self, planLayer, evalLayer,layerType):
         ''' This function intersects a evaluation feature with a test feature set and returns a feature collection '''
-        x = planLayer.intersection(evalLayer)
-        allJSON = export_to_JSON(x)
-        featureCollectionList = []
-        featureCollectionList.append(self.constructSingleFeatureDef(allJSON,layerType))
         outputJSON = {}
         outputJSON["type"] = "FeatureCollection"
+        featureCollectionList = []
+        success = 0
+        try:
+            x = planLayer.intersection(evalLayer)
+            allJSON = export_to_JSON(x)
+            featureCollectionList.append(self.constructSingleFeatureDef(allJSON,layerType))
+            success = 1
+        except Exception as e: 
+            # pass
+            print 'here %s' %e
+            success = 0
+            # self.logger.error('Error in Intersection %s' % e)
         outputJSON["features"]= featureCollectionList
-        return outputJSON
+        return outputJSON, success
 
     def genUnaryUnion(self, colorList ):
         try:
