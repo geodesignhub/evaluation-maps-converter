@@ -146,7 +146,7 @@ class ConvertEvaluation():
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
-        geometryerror= 0
+        geometrysuccess= 0
         if inputfiles:
             self.logger.warning("Incorrect zip file")
             self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
@@ -333,16 +333,16 @@ class ConvertEvaluation():
                             evalFeats = []
                         if evalFeats:
                             with open(o, 'w') as outFile:
-                                op, geometryerror = myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k)
+                                op, geometrysuccess = myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k)
                                 json.dump( op, outFile)
-                                
+                    
                         else: 
                             self.logger.info("No %s features in input evaluation." % k)
                             self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
                 
                 if max(timetaken) > 4.0:
                     self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
-                elif geometryerror: 
+                elif geometrysuccess ==0: 
                     self.opstatus.set_status(stage=7, status=2, statustext= "Your file has topology and geometry errors. Please fix them and try again. ")
                 else:
                     self.opstatus.set_status(stage=7, status=1)

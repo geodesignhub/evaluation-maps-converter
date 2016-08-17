@@ -73,9 +73,10 @@ class GeomOperations():
             success = 1
         except Exception as e: 
             # pass
-            print 'here %s' %e
+            print 'here %s' % e
             success = 0
             # self.logger.error('Error in Intersection %s' % e)
+
         outputJSON["features"]= featureCollectionList
         return outputJSON, success
 
