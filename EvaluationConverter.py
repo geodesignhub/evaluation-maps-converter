@@ -333,13 +333,8 @@ class ConvertEvaluation():
                             evalFeats = []
                         if evalFeats:
                             with open(o, 'w') as outFile:
-                                op, success = myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k)
-                                print success
+                                op, geometryerror = myGeomOps.checkIntersection(allPlanPolygons,evalFeats, k)
                                 json.dump( op, outFile)
-                            if success:
-                                pass
-                            else:
-                                geometryerror =1
                                 
                         else: 
                             self.logger.info("No %s features in input evaluation." % k)
