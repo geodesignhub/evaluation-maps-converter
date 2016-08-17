@@ -146,6 +146,7 @@ class ConvertEvaluation():
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
+        geometryerror= 0
         if inputfiles:
             self.logger.warning("Incorrect zip file")
             self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
