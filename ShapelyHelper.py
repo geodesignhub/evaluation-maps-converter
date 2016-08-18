@@ -75,7 +75,7 @@ class GeomOperations():
             featureCollectionList.append(self.constructSingleFeatureDef(allJSON,layerType))
             success = 1
         except Exception as e: 
-            print e
+            
             success = 0
             self.logger.error("Error in intersection {0} layer: {1}".format(layerType, e))
 

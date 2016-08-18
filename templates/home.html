@@ -83,7 +83,7 @@
 
                         <div class="stage2result">
                             <p id='stage2statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage2msgdetails"></code></pre></div>
                         </div>
@@ -101,7 +101,7 @@
 
                         <div class="stage3result">
                             <p id='stage3statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage3msgdetails"></pre></div>
                         </div>
@@ -121,7 +121,7 @@
 
                         <div class="stage4result">
                             <p id='stage4statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage4msgdetails"></code></pre></div>
                         </div>
@@ -141,7 +141,7 @@
 
                         <div class="stage5result">
                             <p id='stage5statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage5msgdetails"></code></pre></div>
                         </div>
@@ -160,7 +160,7 @@
 
                         <div class="stage6result">
                             <p id='stage6statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage6msgdetails"></code></pre></div>
                         </div>
@@ -179,7 +179,7 @@
 
                         <div class="stage7result">
                             <p id='stage7statustext'></p>
-                            <p class="stageresultcontrol">Show details..</p>
+                            <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
                                 <pre><code id="stage7msgdetails"></code></pre></div>
                         </div>
@@ -200,6 +200,7 @@
 
 {% endblock %} {% block footer %}
 <script type="text/javascript">
+    var filename;
     $(function() {
 
         $('#upload-file-btn').click(function() {
@@ -209,6 +210,7 @@
                     addnCls: 'humane-flatty-error'
                 });
             } else {
+                filename = $('input[name=file]').get(0).files[0].name.split('.')[0];
                 var form_data = new FormData($('#upload-file')[0]);
                 var promise = $.ajax({
                     type: 'POST',
@@ -358,7 +360,7 @@
                 dataOK = false;
             };
             var h = generateStatusDiv(stageresult);
-            $(".stage" + stageid + "resultcontent").html(h);
+            $("#resultcontent").html(h);
             $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
             $("#stage" + stageid + "statustext").html(stagedata.statustext);
             var allmessages = processMessages(stagedata);
@@ -387,6 +389,7 @@
             }).appendTo("#opresult");
 
         } else {
+            $("#opresult").html('');
             var p = $('<p>', {
                 class: 'subtitle text-error',
                 html: "There are issues with your Shapefile, therefore the output GeoJSON is not available, please review the analysis below and try again.",
@@ -401,7 +404,7 @@
 
         hiddenElement.href = 'data:attachment/text,' + encodeURI(JSON.stringify(gj));
         hiddenElement.target = '_blank';
-        hiddenElement.download = 'evaluation.geojson';
+        hiddenElement.download = filename + '.geojson';
         hiddenElement.click();
 
     }

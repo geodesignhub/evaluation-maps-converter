@@ -203,7 +203,9 @@ class ShapefileHelper():
 				# Finally we write records from the last generator to the output
 				# "sink" file.
 				sink.writerecords(results)
-		return output
+				reprojectstatus = 0 if (len(list(results)) == 0) else 1
+				
+		return output, reprojectstatus
 				
 	def validateSchema(self, schema):
 		try: 
@@ -246,22 +248,27 @@ class FileOperations():
 			crs = allfeats.crs
 			self.logger.info("Reprojecting file")
 			self.opstatus.add_info(stage=4, msg = "Checking projection..")
+			
+			self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
 			try:
-				self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
-				reprojected_fname = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
-				
+				reprojected_fname, reprojectstatus = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
+				if reprojectstatus == 0:
+					self.logger.error("Error in reprojecting file, there are no features")
 			except Exception as e:
 				self.logger.info("Error in reprojecting file %s " % e)
 				self.opstatus.set_status(stage=4, status=0, statustext ="Problem with file reprojection")
 				self.opstatus.add_error(stage=4, msg = "Problems with file reprojection. ")
 
-			else:
+			if (reprojectstatus ==1):	
+				self.logger.info("File reprojected successfully as %s .." % reprojected_fname)
+				
 				self.opstatus.set_status(stage=4, status=1, statustext ="File reprojected successfully")
 				self.opstatus.add_success(stage=4, msg = "File reprojected successfully")
-
-			self.logger.info("File reprojected successfully as %s .." % reprojected_fname)
+			else:
+				self.logger.error("Errors in reprojecting file geometry")
+				self.opstatus.add_error(stage=4, msg ="Errors in reprojecting file geometry")
 			
-        return reprojected_fname
+        return reprojected_fname, reprojectstatus
         
     def simplifyReprojectedFile(self, reprojectedfilepath):    
         # simplify reprojected file
