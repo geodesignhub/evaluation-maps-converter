@@ -70,7 +70,7 @@ def upload_file():
             gj, status = myEvalConverter.convert()
             op['gj'] = gj
             op['status'] = status
-            # myEvalConverter.cleanDirectories()
+            myEvalConverter.cleanDirectories()
 
     return Response(json.dumps(op), status=200, mimetype='application/json')
 
