@@ -20,47 +20,6 @@ class ShapefileHelper():
 		self.logger = logging.getLogger("evals logger")
 		self.opstatus = opstatus
 		
-
-	# def _round(self,pt, precision):
-	# 	try:
-	# 		return round(pt[0], precision), round(pt[1], precision)
-
-	# 	except TypeError:
-	# 		pt = list(pt)
-	# 		return round(pt[0], precision), round(pt[1], precision)
-
-
-	# def round_ring(self,ring, precision):
-	# 	return [self._round(tuple(pt), precision) for pt in ring]
-
-
-	# def geometry(self,geom, precision):
-	# 	g = dict(geom.items())
-
-	# 	if geom['type'] == 'GeometryCollection':
-	# 		g['geometries'] = [self.geometry(x, precision) for x in geom['geometries']]
-	# 		return g
-
-	# 	try:
-	# 		c = np.array(geom['coordinates'])
-	# 		g['coordinates'] = np.round(c, precision)
-
-	# 	except (AttributeError, KeyError, TypeError, NameError):
-
-	# 		if geom['type'] == 'Point':
-	# 			g['coordinates'] = self._round(geom['coordinates'], precision)
-
-	# 		elif geom['type'] in ('MultiPoint', 'LineString'):
-	# 			g['coordinates'] = self.round_ring(geom['coordinates'], precision)
-
-	# 		elif geom['type'] in ('MultiLineString', 'Polygon'):
-	# 			g['coordinates'] = [self.round_ring(r, precision) for r in geom['coordinates']]
-
-	# 		elif geom['type'] == 'MultiPolygon':
-	# 			g['coordinates'] = [[self.round_ring(r, precision) for r in rings] for rings in geom['coordinates']]
-
-	# 	return g
-
 	def get_output_fname(self,fname, new_suffix, destdirectory= None):
 		path = os.path.basename(fname)
 		filepath , filename =  os.path.split(fname)
@@ -170,9 +129,10 @@ class ShapefileHelper():
 		except Exception, e:
 		    # Writing uncleanable features to a different shapefile
 		    # is another option.
-		    self.logger.error(
+			self.opstatus.add_warning(stage=4, msg = "Error in cleaning a record in the file")
+			self.logger.error(
 		        "Error cleaning record %s:", rec)
-		    return None
+			return None
 
 	def reproject_to_4326(self, shape_fname, outputdirectory):
 		output = self.get_output_fname(shape_fname, '_4326', outputdirectory)
@@ -203,9 +163,9 @@ class ShapefileHelper():
 				# Finally we write records from the last generator to the output
 				# "sink" file.
 				sink.writerecords(results)
-				reprojectstatus = 0 if (len(list(results)) == 0) else 1
 				
-		return output, reprojectstatus
+				
+		return output
 				
 	def validateSchema(self, schema):
 		try: 
@@ -248,27 +208,11 @@ class FileOperations():
 			crs = allfeats.crs
 			self.logger.info("Reprojecting file")
 			self.opstatus.add_info(stage=4, msg = "Checking projection..")
-			
+		
 			self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
-			try:
-				reprojected_fname, reprojectstatus = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
-				if reprojectstatus == 0:
-					self.logger.error("Error in reprojecting file, there are no features")
-			except Exception as e:
-				self.logger.info("Error in reprojecting file %s " % e)
-				self.opstatus.set_status(stage=4, status=0, statustext ="Problem with file reprojection")
-				self.opstatus.add_error(stage=4, msg = "Problems with file reprojection. ")
+			reprojected_fname  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
 
-			if (reprojectstatus ==1):	
-				self.logger.info("File reprojected successfully as %s .." % reprojected_fname)
-				
-				self.opstatus.set_status(stage=4, status=1, statustext ="File reprojected successfully")
-				self.opstatus.add_success(stage=4, msg = "File reprojected successfully")
-			else:
-				self.logger.error("Errors in reprojecting file geometry")
-				self.opstatus.add_error(stage=4, msg ="Errors in reprojecting file geometry")
-			
-        return reprojected_fname, reprojectstatus
+        return reprojected_fname
         
     def simplifyReprojectedFile(self, reprojectedfilepath):    
         # simplify reprojected file

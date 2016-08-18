@@ -338,15 +338,16 @@
 
     }
 
-
     function processserverdata(sdata) {
         // loop over stages 
         var dataOK = true;
-
         for (var stageid in sdata) {
             var stagedata = sdata[stageid];
             var stageresult;
             var textclass;
+
+            // $(".stage" + stageid + "resultcontent").html('');
+            // $("#stage" + stageid + "statustext").html('');
             if (stagedata.status === 1) {
                 stageresult = 'success';
                 textclass = 'text-success';
@@ -360,7 +361,8 @@
                 dataOK = false;
             };
             var h = generateStatusDiv(stageresult);
-            $("#resultcontent").html(h);
+
+            $(".stage" + stageid + "resultcontent").html(h);
             $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
             $("#stage" + stageid + "statustext").html(stagedata.statustext);
             var allmessages = processMessages(stagedata);
@@ -369,7 +371,6 @@
             for (var x = 0; x < msglen; x++) {
                 var curmsg = allmessages[x];
                 var html = '<span class="' + curmsg['class'] + '"> ' + curmsg['msg'] + '</span><br>';
-
                 $("#stage" + stageid + "msgdetails").append(html);
             }
 

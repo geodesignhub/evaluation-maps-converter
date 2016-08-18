@@ -21,7 +21,7 @@ from os.path import isfile, join
 import logging
 import Colorer
 import zipfile
-
+from collections import defaultdict
 # LOG_FILENAME = "runlog.log"
 loggers = {}
 def configure_logging(name):
@@ -53,7 +53,7 @@ class OpStatus():
     def __init__(self):
         self.stages = {}
         for i in range(1,8):
-            x = {'status':0, 'errors':[],'warnings':[], 'info':[], 'debug':[], 'success':[], 'statustext':""}
+            x = {'status':3, 'errors':[],'warnings':[], 'info':[], 'debug':[], 'success':[], 'statustext':""}
             self.stages[i] = x
         self.current_milli_time = lambda: int(round(time.time() * 1000))
     
@@ -80,6 +80,12 @@ class OpStatus():
         if statustext:
             self.stages[stage]['statustext']= statustext
 
+    def get_all_status(self):
+        allstatus = {}
+        for stage, results in self.stages.iteritems():
+            allstatus[stage] = results['status']
+        return allstatus
+
     def get_allstatuses(self):
         return json.dumps(self.stages)
 
@@ -102,6 +108,7 @@ class ConvertEvaluation():
     0 - Error / Failed
     1 - Success /OK
     2 - Warnings
+    3 - Not started
 
     '''
     def __init__(self):
@@ -111,6 +118,7 @@ class ConvertEvaluation():
         self.OUTPUT_SHARE = os.path.join(curPath, config.geojsonoutput['directory'])
         self.logger = configure_logging('evals logger')
         self.opstatus = OpStatus()
+        
 
     def convert(self):
         self.logger.info("Geodesign Hub Evaluations Converter")    
@@ -136,10 +144,12 @@ class ConvertEvaluation():
                 zip_ref.close()
             except Exception as e:
                 ferror = True
+                
                 self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading Zip file contents.")
                 self.opstatus.add_error(stage=1, msg = "Problems with your zip file, please make sure that it is not curropt.")
 
         if not ferror: 
+
             self.opstatus.set_status(stage=1, status=1, statustext ="Zip file read without problems")
             self.opstatus.add_success(stage=1, msg = "File contents unzipped successfully")
         
@@ -147,8 +157,8 @@ class ConvertEvaluation():
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
         geometrysuccess= 0
-
-        if inputfiles:
+        reprojectstatus = 0
+        if inputfiles and len(inputfiles)==1:
             self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
             self.opstatus.add_success(stage=2, msg = "Shapefile extracted successfully and contents read")
             for f in inputfiles:
@@ -158,13 +168,12 @@ class ConvertEvaluation():
                     schema = curfile.schema
                     schemavalidates = myShpFileHelper.validateSchema(schema)    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
-                    
                     try: 
                         assert schemavalidates
                         self.logger.info("Every feature is a polygon")
                         self.opstatus.add_info(stage=3, msg = "Every feature is a polygon")
                     except AssertionError as e:
-                        self.logger.error("Your file has features that are not 'Polyons', please ensure that all MultiPolygons, 3D Polygons etc. are removed.  ")
+                        self.logger.error("Your file has features that are not 'Polyons', please ensure that all 3D Polygons etc. are removed.")
                         self.opstatus.add_error(stage=3, msg = "Input Shapefile does not have the correct geometry.")
                         
                         # sys.exit(1)
@@ -176,40 +185,33 @@ class ConvertEvaluation():
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
                         self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
                         # sys.exit(1)
-
+                
                 if schemavalidates and featuresvalidate:
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the areatype column and correct values in the attribtute table.")
                         self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
                 else:
+                    
                     self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
                     self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
                 # Reproject the file. 
                 if schemavalidates and featuresvalidate:
-                    reprojectedfile, reprojectstatus = myFileOps.reprojectFile(filepath)
-                    if reprojectstatus:
-                        simplifiedfile, bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
-                        allBounds.append(bounds)
-                        try:
-                            gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
-                        except Exception as e: 
-                            self.logger.error("Error in converting shapefile to Geojson %s" %e)
-                            self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
-                            self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
+                    print 'here2'
+                    reprojectedfile = myFileOps.reprojectFile(filepath)
+                    
+                    self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
+                    self.opstatus.add_success(stage=4, msg = "Reprojected file successfully written successfully")
+                    simplifiedfile, bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
+                    allBounds.append(bounds)
+                    try:
+                        gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+                    except Exception as e: 
+                        self.logger.error("Error in converting shapefile to Geojson %s" %e)
+                        self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
+                        self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
 
-                        with open(gjFile,'r') as gj:
-                            allGJ[f] = json.loads(gj.read())
-                    else: 
-                                            
-                        self.opstatus.set_status(stage=4, status=0, statustext ="There are errors in reprojecting the file")
-                        self.opstatus.add_error(stage=4, msg = "Check your file to ensure that there are no MultiPolygons or other similar geometries")
-                        self.opstatus.set_status(stage=5, status=0, statustext ="Shapefile was not reprojected so will not convert to GeoJSON")
-                        self.opstatus.add_error(stage=5, msg = "Check reprojection errors or reproject to EPSG 4326 in GIS software")
-                        
-                        self.opstatus.set_status(stage=6, status=0, statustext ="Shapefile not converted to GeoJSON. ")
-                        self.opstatus.add_error(stage=6, msg = "File will not be converted to GeoJSON, see earlier errors")
-                        
-                        self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started, please upload the correct file")
-                        self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")    
+                    with open(gjFile,'r') as gj:
+                        allGJ[f] = json.loads(gj.read())
+
                 else: 
                     
                     self.opstatus.set_status(stage=4, status=0, statustext ="There are errors in file attribute table, reprojection not started")
@@ -223,11 +225,13 @@ class ConvertEvaluation():
                     self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started, please upload the correct file")
                     self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")
                     # convert to geojson.
-            try:
-                # assert that file reprojected and converted to gj
-                assert reprojectstatus
-                self.logger.info("Starting perfomrance analysis")
+            # TODO: make this multifile
 
+            try:
+                assert 0 in set(self.opstatus.get_all_status().values())
+                self.opstatus.set_status(stage=7, status=0, statustext= "There were errors in pervious stages, performance testing will not be conducted until they are resolved. ")
+            except AssertionError as ea:                  
+                self.logger.info("Starting perfomrance analysis")
                 myGeomOps = ShapelyHelper.GeomOperations()
                 allBounds = myGeomOps.calculateBounds(allBounds)
                 allBounds = allBounds.split(',')
@@ -243,7 +247,6 @@ class ConvertEvaluation():
                 self.logger.info("Generating random features within the bounds")
                 self.opstatus.add_info(stage=7, msg = "Generating random features within the evaluation feature bounds")
                 for i in range(5):
-                    print allBounds
                     x = myGJHelper.genRandom(featureType="Polygon", numberVertices=4, boundingBox= allBounds)
                     f = {"type": "Feature", "properties": {},"geometry":json.loads(geojson.dumps(x))}
                     featData['features'].append(f)
@@ -346,8 +349,6 @@ class ConvertEvaluation():
                     self.opstatus.set_status(stage=7, status=2, statustext= "Your file has topology and geometry errors. Please fix them and try again. ")
                 else:
                     self.opstatus.set_status(stage=7, status=1)
-            except AssertionError as ae:
-                   self.opstatus.set_status(stage=7, status=0)
         else:
             self.logger.warning("Could not find .shp in the root of the zip archive.")
             self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
