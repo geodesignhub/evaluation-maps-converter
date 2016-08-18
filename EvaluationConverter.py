@@ -148,7 +148,6 @@ class ConvertEvaluation():
         allGJ = {}
         geometrysuccess= 0
         if inputfiles:
-            self.logger.warning("Incorrect zip file")
             self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
             self.opstatus.add_success(stage=2, msg = "Shapefile extracted successfully and contents read")
             for f in inputfiles:
@@ -259,27 +258,12 @@ class ConvertEvaluation():
                     errorDict =  {'red':0,'red2':0, 'yellow':0,'green':0,'green2':0,'green3':0, 'constraints':0}
 
                     for curFeature in evalData['features']:
-                        try:
-                            assert curFeature['properties']['areatype']
-                        except AssertionError as e:
-                            self.logger.error("Every evaluation feature must have a areatype attribute")
-                            self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
-                            self.opstatus.add_error(stage=7, msg = "Every evaluation feature must have a areatype attribute")
-                            # sys.exit(1)
-
-                        try:
-                            assert curFeature['properties']['areatype'] in ['constraints','red2', 'red', 'yellow', 'green', 'green2','green3']
-                        except AssertionError as e:
-                            self.logger.error("Areatype must be one of valid, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
-                            self.opstatus.set_status(stage=7, status=0, statustext ="Areatype attribute not present")
-                            self.opstatus.add_error(stage=7, msg = "Areatype must be one of valid allowed values, please review areatype property details at http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
-                            # sys.exit(1)
-                            
                         areatype = curFeature['properties']['areatype']
                         errorCounter = errorDict[areatype]
-
                         shp, errorCounter = myGeomOps.genFeature(curFeature['geometry'], errorCounter)
-                        colorDict[areatype].append(shp) 
+                        errorDict[areatype] = errorCounter
+                        if shp:
+                            colorDict[areatype].append(shp) 
                         
                     self.logger.info("Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
                     self.opstatus.add_info(stage=7, msg = "Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
@@ -349,7 +333,7 @@ class ConvertEvaluation():
             except AssertionError as ae:
                    self.opstatus.set_status(stage=7, status=0)
         else:
-            self.logger.warning("Incorrect zip file")
+            self.logger.warning("Could not find .shp in the root of the zip archive.")
             self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
             self.opstatus.add_error(stage=2, msg = "Please ensure that all Shapefiles are in the root directory, the current file does not have it in the root.")
 
@@ -365,5 +349,5 @@ class ConvertEvaluation():
                         os.unlink(file_path)
                     elif os.path.isdir(file_path): shutil.rmtree(file_path)
                 except Exception as e:
-                    print e
-                    self.logger.error("Error Clearing out share.")
+                    
+                    self.logger.error("Error Clearing out share. %s " % e)

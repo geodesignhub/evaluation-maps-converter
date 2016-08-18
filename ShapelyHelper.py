@@ -3,6 +3,7 @@ from shapely.geometry import shape, mapping, shape, asShape
 from shapely.geometry import MultiPolygon, MultiPoint, MultiLineString
 from shapely.ops import unary_union
 import json
+import logging
 from shapely import speedups
 
 class ShapelyEncoder(json.JSONEncoder):
@@ -35,6 +36,8 @@ def load_from_JSON(json_string):
     return json.loads(json_string, cls=ShapelyDecoder)
 
 class GeomOperations():
+    def __init__(self):
+        self.logger = logging.getLogger("evals logger")
 
     def calculateBounds(self,allBounds):
 
@@ -72,10 +75,9 @@ class GeomOperations():
             featureCollectionList.append(self.constructSingleFeatureDef(allJSON,layerType))
             success = 1
         except Exception as e: 
-            # pass
-            print 'here %s' % e
+            print e
             success = 0
-            # self.logger.error('Error in Intersection %s' % e)
+            self.logger.error("Error in intersection {0} layer: {1}".format(layerType, e))
 
         outputJSON["features"]= featureCollectionList
         return outputJSON, success
@@ -84,7 +86,7 @@ class GeomOperations():
         try:
             colorUnion = unary_union([x for x in colorList if x.geom_type in ['Polygon' ,'MultiPolygon']])
         except Exception as e:
-            print "Union failed: %s" % e
+            self.logger.error("Union failed: %s" % e)
             colorUnion = unary_union([x for x in colorList if x.geom_type in ['Polygon','MultiPolygon'] and x.is_valid])
 
         return colorUnion
@@ -93,7 +95,7 @@ class GeomOperations():
         try:
             curShape = asShape(geom)
         except Exception as e:
-            print explain_validity(curShape)
+            self.logger.error(explain_validity(curShape))
             errorCounter+=1
         return curShape, errorCounter
 
@@ -103,12 +105,15 @@ class ShapesFactory():
     '''
     A helper function to convert to a Shapely geometry
     '''
+    def __init__(self):
+        self.logger = logging.getLogger("evals logger")
+
     def genFeature(self, geom):
         try:
             curShape = asShape(geom)
         except Exception as e:
-            print explain_validity(curShape)
-            
+            self.logger.error(explain_validity(curShape))
+
         return curShape
         
     def multiPolytoFeature(self, mp):
@@ -123,8 +128,7 @@ class ShapesFactory():
             # Construct a unary_union assume that there are no errors in
             # geometry.
             allDsgnPlygons = unary_union(allAreas)
-        except Exception, e1:
-            # print "OK"
+        except Exception as e1:
             # If there are errors while consutrcuting the union, examine the
             # geometries further to seperate
             s1All = []
@@ -133,7 +137,7 @@ class ShapesFactory():
                     x.geom_type == 'Polygon' or x.geom_type == 'MultiPolygon') and x.is_valid])
                 if s1Polygons:
                     s1All.append(s1Polygons)
-            except Exception, e:
+            except Exception as e:
                 logging.error(
                     'SpatialimpactCalculator.py Error in CreateUnaryUnion Polygon: %s' % e)
             if s1All:
