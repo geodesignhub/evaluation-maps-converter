@@ -183,19 +183,21 @@ class ConvertEvaluation():
                         self.opstatus.add_info(stage=3, msg = "Every feature has the correct areatype value one of: red, yellow, green, green2, green3")
                     except AssertionError as e: 
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
-                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
+
                         # sys.exit(1)
                 
                 if schemavalidates and featuresvalidate:
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the areatype column and correct values in the attribtute table.")
                         self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
                 else:
-                    
                     self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: http://www.geodesignsupport.com/kb/geojson-feature-attributes/")
-                    self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
+                    if not featuresvalidate:
+                        self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
+                    if not schemavalidates:                        
+                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
+
                 # Reproject the file. 
                 if schemavalidates and featuresvalidate:
-                    print 'here2'
                     reprojectedfile = myFileOps.reprojectFile(filepath)
                     
                     self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
