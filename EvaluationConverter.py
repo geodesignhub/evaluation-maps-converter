@@ -119,7 +119,6 @@ class ConvertEvaluation():
         self.logger = configure_logging('evals logger')
         self.opstatus = OpStatus()
         
-
     def convert(self):
         self.logger.info("Geodesign Hub Evaluations Converter")    
         myShpFileHelper = EvaluationFileOps.ShapefileHelper(self.opstatus)
@@ -134,7 +133,7 @@ class ConvertEvaluation():
             assert os.path.exists(self.SOURCE_FILE_SHARE)
         except AssertionError as e:
             self.logger.error("Source file directory does not exist, please check config.py for correct filename and directory")
-
+        # Read the zip files
         zipfiles = [f1 for f1 in listdir(self.SOURCE_FILE_SHARE) if (os.path.splitext(f1)[1] == '.zip')]
         ferror = False
         for z in zipfiles:
@@ -144,15 +143,16 @@ class ConvertEvaluation():
                 zip_ref.close()
             except Exception as e:
                 ferror = True
+                self.logger.error("Error in extracting zip file %s" %e)
                 
-                self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading Zip file contents.")
-                self.opstatus.add_error(stage=1, msg = "Problems with your zip file, please make sure that it is not curropt.")
-
-        if not ferror: 
-
+        if ferror: 
+            self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading Zip file contents.")
+            self.opstatus.add_error(stage=1, msg = "Problems with your zip file, please make sure that it is not curropt.")
+        else:
             self.opstatus.set_status(stage=1, status=1, statustext ="Zip file read without problems")
             self.opstatus.add_success(stage=1, msg = "File contents unzipped successfully")
-        
+            
+        # Zipfile has been unzipped, read the chapefiels.
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
@@ -176,16 +176,15 @@ class ConvertEvaluation():
                         self.logger.error("Your file has features that are not 'Polyons', please ensure that all 3D Polygons etc. are removed.")
                         self.opstatus.add_error(stage=3, msg = "Input Shapefile does not have the correct geometry.")
                         
-                        # sys.exit(1)
                     try: 
                         assert featuresvalidate
                         self.logger.info("Every feature as the correct areatype")
                         self.opstatus.add_info(stage=3, msg = "Every feature has the correct areatype value one of: red, yellow, green, green2, green3")
                     except AssertionError as e: 
                         self.logger.error("Features in a shapefile must have allowed areatype attributes")
-
-                        # sys.exit(1)
-                
+                        self.opstatus.add_error(stage=3, msg = "Features in a shapefile must have allowed areatype attributes")
+                        
+                    
                 if schemavalidates and featuresvalidate:
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the areatype column and correct values in the attribtute table.")
                         self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
@@ -215,20 +214,16 @@ class ConvertEvaluation():
                         allGJ[f] = json.loads(gj.read())
 
                 else: 
-                    
                     self.opstatus.set_status(stage=4, status=0, statustext ="There are errors in file attribute table, reprojection not started")
                     self.opstatus.add_error(stage=4, msg = "Check the attribute table for areatype column and correct areatype value.")
                     self.opstatus.set_status(stage=5, status=0, statustext ="File attribute table does not validate, therefore will not simplify")
                     self.opstatus.add_error(stage=5, msg = "Check the attribute table for areatype column and correct areatype value")
-                    
                     self.opstatus.set_status(stage=6, status=0, statustext ="Shapefile not converted to GeoJSON. ")
                     self.opstatus.add_error(stage=6, msg = "File will not be converted to GeoJSON, see earlier errors")
-                    
                     self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started, please upload the correct file")
                     self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")
-                    # convert to geojson.
-            # TODO: make this multifile
 
+            # TODO: make this multifile
             try:
                 assert 0 in set(self.opstatus.get_all_status().values())
                 self.opstatus.set_status(stage=7, status=0, statustext= "There were errors in pervious stages, performance testing will not be conducted until they are resolved. ")
@@ -250,7 +245,7 @@ class ConvertEvaluation():
                 self.opstatus.add_info(stage=7, msg = "Generating random features within the evaluation feature bounds")
                 for i in range(5):
                     x = myGJHelper.genRandom(featureType="Polygon", numberVertices=4, boundingBox= allBounds)
-                    f = {"type": "Feature", "properties": {},"geometry":json.loads(geojson.dumps(x))}
+                    f = {"type": "Feature", "properties": {},"geometry": json.loads(geojson.dumps(x))}
                     featData['features'].append(f)
 
                 # polygonize the features
@@ -287,6 +282,7 @@ class ConvertEvaluation():
                             colorDict[areatype].append(shp) 
                         
                     self.logger.info("Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
+
                     self.opstatus.add_info(stage=7, msg = "Geometry errors in %(A)s Red2, %(B)s Red, %(C)s Yellow, %(D)s Green, %(E)s Green2, %(F)s Green3 and %(G)s Constraints features." % {'A' : errorDict['red2'], 'B' : errorDict['red'], 'C':errorDict['yellow'], 'D':errorDict['green'], 'E':errorDict['green2'],'F':errorDict['green3'], 'G': errorDict['constraints']})
                 
                     # self.logger.debug(len(colorDict['red2']), len(colorDict['red']), len(colorDict['yellow']), len(colorDict['green']),len(colorDict['green2']),len(colorDict['green3']),len(colorDict['constraints']))
@@ -354,7 +350,7 @@ class ConvertEvaluation():
         else:
             self.logger.warning("Could not find .shp in the root of the zip archive.")
             self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
-            self.opstatus.add_error(stage=2, msg = "Please ensure that all Shapefiles are in the root directory, the current file does not have it in the root.")
+            self.opstatus.add_error(stage=2, msg = "Please ensure that all Shapefiles are in the root directory, the current file does not have it in the root or there are multiple shapefiles in the zip archive.")
 
         return allGJ , self.opstatus.get_allstatuses()
 
