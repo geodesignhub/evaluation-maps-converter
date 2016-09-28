@@ -31,7 +31,7 @@ Please review the [data simplification](http://www.geodesignsupport.com/kb/map-s
 ###License
 The MIT License (MIT)
 
-Copyright (c) 2015 Geodesign Hub Pvt. Ltd.
+Copyright (c) 2015 Hrishikesh Ballal
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
