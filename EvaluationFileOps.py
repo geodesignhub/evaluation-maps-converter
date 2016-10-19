@@ -122,16 +122,17 @@ class ShapefileHelper():
 		    if not geom.is_valid:
 		        clean = geom.buffer(0.0)
 		        assert clean.is_valid
-		        assert clean.geom_type == 'Polygon'
+		        assert clean.geom_type in ['Polygon','MultiPolygon']
 		        geom = clean
 		    rec['geometry'] = mapping(geom)
 		    return rec
 		except Exception, e:
 		    # Writing uncleanable features to a different shapefile
 		    # is another option.
+			
 			self.opstatus.add_warning(stage=4, msg = "Error in cleaning a record in the file")
 			self.logger.error(
-		        "Error cleaning record %s:", rec)
+		        "Error cleaning record %s:", e)
 			return None
 
 	def reproject_to_4326(self, shape_fname, outputdirectory):
@@ -146,6 +147,7 @@ class ShapefileHelper():
 					) as sink:
 				
 				origproj = Proj(source.crs, preserve_units=True)
+				
 				func = functools.partial(
 					self.transform_coords,
 					functools.partial(
@@ -206,6 +208,9 @@ class FileOperations():
 			schema = allfeats.schema
 			# get the crs
 			crs = allfeats.crs
+			# if (crs['init']== 'epsg:4326'):
+			# 	reprojected_fname= filepath
+			# else:
 			self.logger.info("Reprojecting file")
 			self.opstatus.add_info(stage=4, msg = "Checking projection..")
 		

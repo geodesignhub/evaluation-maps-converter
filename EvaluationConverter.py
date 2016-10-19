@@ -153,6 +153,7 @@ class ConvertEvaluation():
             self.opstatus.add_success(stage=1, msg = "File contents unzipped successfully")
             
         # Zipfile has been unzipped, read the chapefiels.
+
         inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}

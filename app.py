@@ -75,6 +75,6 @@ def upload_file():
     return Response(json.dumps(op), status=200, mimetype='application/json')
 
 if __name__ == '__main__':
-    app.debug = True
+    app.debug = False
     port = int(os.environ.get("PORT", 5001))
     app.run(port =5001)
