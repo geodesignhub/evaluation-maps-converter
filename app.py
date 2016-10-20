@@ -60,7 +60,8 @@ def upload_file():
 
         if not allowed_file(file.filename):
             op['msg']="Incorrect file Extension"
-        
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.mkdir(app.config['UPLOAD_FOLDER'])
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
