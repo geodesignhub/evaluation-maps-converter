@@ -30,12 +30,12 @@ def configure_logging(name):
         return loggers.get(name)
     else:    
         logger = logging.getLogger("evals logger")
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.ERROR)
         # Format for our loglines
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         # Setup console logging
         ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.ERROR)
         ch.setFormatter(formatter)
         logger.addHandler(ch)
         # Setup file logging as well
@@ -169,6 +169,7 @@ class ConvertEvaluation():
                     schema = curfile.schema
                     schemavalidates = myShpFileHelper.validateSchema(schema)    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
+                    
                     try: 
                         assert schemavalidates
                         self.logger.info("Every feature is a polygon")

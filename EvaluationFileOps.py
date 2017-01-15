@@ -131,8 +131,9 @@ class ShapefileHelper():
 		    # is another option.
 			
 			self.opstatus.add_warning(stage=4, msg = "Error in cleaning a record in the file")
-			self.logger.error(
-		        "Error cleaning record %s:", e)
+			# self.logger.error(
+		        # "Error cleaning record %s:", e)
+			
 			return None
 
 	def reproject_to_4326(self, shape_fname, outputdirectory):
@@ -208,14 +209,14 @@ class FileOperations():
 			schema = allfeats.schema
 			# get the crs
 			crs = allfeats.crs
-			# if (crs['init']== 'epsg:4326'):
-			# 	reprojected_fname= filepath
-			# else:
-			self.logger.info("Reprojecting file")
-			self.opstatus.add_info(stage=4, msg = "Checking projection..")
-		
-			self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
-			reprojected_fname  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
+			if (crs['init'] == 'epsg:4326'):
+				reprojected_fname= filepath
+			else:
+					self.logger.info("Reprojecting file")
+					self.opstatus.add_info(stage=4, msg = "Checking projection..")
+				
+					self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
+					reprojected_fname  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
 
         return reprojected_fname
         

@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance.</p>
+<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. It is recommended that you use GIS software to reproject your file to <a href="http://epsg.io/4326" target="_blank">EPSG:4326</a> before uploading.</p>
 <table>
     <thead>
     </thead>
@@ -11,7 +11,7 @@
                         <li>
                             <label for="file">Select a Evaluation Shapefile</label>
                             <input name="file" type="file" accept=".zip">
-                            <span>All Shapefile contents must be in a .zip file.</span>
+                            <span>All Shapefile contents must be in a .zip file</span>
                         </li>
                         <li>
                             <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation</button>
