@@ -12,9 +12,9 @@ It is Python Flask App that is deployed on Heroku.
 
 
 ###Before you start
-You will need a Evaluation map already prepared for your study area. Evaluation maps can be created using GIS tools. Please review evaluation map creation in the [step-by-step guide for data preparation](http://www.geodesignsupport.com/kb/step-by-step-guide-to-setting-up-data-for-your-project/) for a project on Geodesign Hub. They are built in five or three colors using standard GIS modelling tools. 
+You will need a Evaluation map already prepared for your study area. Evaluation maps can be created using GIS tools. Please review evaluation map creation in the [step-by-step guide for data preparation](https://community.geodesignhub.com/t/step-by-step-guide-to-setting-up-data-for-your-project/45) for a project on Geodesign Hub. They are built in five or three colors using standard GIS modelling tools. 
 
-Your file must have a ```areatype``` property in the attributes table that has a value of one of the following strings: red, yellow, green, green2, green3 depending on the Evaluation model. A detailed guide to building a evaluation file is [here](http://www.geodesignsupport.com/kb/step-by-step-guide-to-preparing-evaluation-maps/). 
+Your file must have a ```areatype``` property in the attributes table that has a value of one of the following strings: red, yellow, green, green2, green3 depending on the Evaluation model. A detailed guide to building a evaluation file is [here](https://community.geodesignhub.com/t/making-evaluation-maps/62). 
 
  
 ###Other notes
@@ -26,7 +26,7 @@ The script creates a union of the red, yellow and green features and intersects 
 ###Background
 Evaluation Maps produced by GIS tools as Shapefiles can be very large. In addition, Shapefiles cannot be directly uploaded to Geodesign Hub. This is a tool that will help in simplifying the maps, reprojecting them to EPSG 4326 and generate a GeoJSON for you. Then it can be directly uploaded to Geodesign Hub.
 
-Please review the [data simplification](http://www.geodesignsupport.com/kb/map-simplification/) article to understand the file size and performance requirements for the tool.
+Please review the [data simplification](https://community.geodesignhub.com/t/simplifying-gis-maps-and-features/47) article to understand the file size and performance requirements for the tool.
 
 ###License
 The MIT License (MIT)
