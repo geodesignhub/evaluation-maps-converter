@@ -191,7 +191,7 @@ class ConvertEvaluation():
                         self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the areatype column and correct values in the attribtute table.")
                         self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
                 else:
-                    self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: <a href='http://www.geodesignsupport.com/kb/geojson-feature-attributes/' target='_blank'>http://www.geodesignsupport.com/kb/geojson-feature-attributes/</a>")
+                    self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: <a href='https://community.geodesignhub.com/t/geojson-shapefile-feature-attributes/55' target='_blank'>GeoJSON / Shapefile feature attributes</a>")
                     if not featuresvalidate:
                         self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
                     if not schemavalidates:                        
