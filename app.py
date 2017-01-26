@@ -46,8 +46,8 @@ def requires_auth(f):
 def api_root():
     return render_template('home.html')
 
-@app.route('/upload', methods = ['POST'])
 @requires_auth
+@app.route('/upload', methods = ['POST'])
 def upload_file():
     op = {}
     if request.method == 'POST':

@@ -14,7 +14,7 @@
                             <span>All Shapefile contents must be in a .zip file</span>
                         </li>
                         <li>
-                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation</button>
+                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation Shapefile</button>
                         </li>
                     </ul>
                 </form>
@@ -243,7 +243,7 @@
                 });
                 promise.fail(function(data) {
 
-                    humane.log("Error in receiving data..", {
+                    humane.log("Error in receiving data, you can try to refresh the page and reupload.", {
                         addnCls: 'humane-flatty-error'
                     });
                     console.log('error');
