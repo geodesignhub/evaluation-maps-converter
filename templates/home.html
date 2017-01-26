@@ -359,6 +359,10 @@
                 stageresult = 'error';
                 textclass = 'text-error';
                 dataOK = false;
+            } else if (stagedata.status === 4) {
+                stageresult = 'info';
+                textclass = 'text-info';
+                dataOK = true;
             };
             var h = generateStatusDiv(stageresult);
 
@@ -382,7 +386,7 @@
             // show the download button
             var p = $('<p>', {
                 class: 'subtitle',
-                html: "Your Shapefile can be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project.",
+                html: "Your Shapefile can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project. Please review the analysis for warning or information messages.",
             }).appendTo("#opresult");
             var p = $('<div>', {
                 class: 'subtitle',
@@ -400,13 +404,29 @@
 
     }
 
-    function downloadGJ() {
-        var hiddenElement = document.createElement('a');
+    (function(console){
+    console.save = function(data, filename){
+    if(!data) {
+                console.error('Console.save: No data')
+                return;
+            }
+    if(!filename) filename = filename +'.geojson'
+    if(typeof data === "object"){
+                data = JSON.stringify(data, undefined, 4)
+            }
+    var blob = new Blob([data], {type: 'text/json'}),
+                e    = document.createEvent('MouseEvents'),
+                a    = document.createElement('a')
+    a.download = filename
+            a.href = window.URL.createObjectURL(blob)
+            a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+            e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+            a.dispatchEvent(e)
+        }
+    })(console)
 
-        hiddenElement.href = 'data:attachment/text,' + encodeURI(JSON.stringify(gj));
-        hiddenElement.target = '_blank';
-        hiddenElement.download = filename + '.geojson';
-        hiddenElement.click();
+    function downloadGJ() {
+        console.save(gj);
 
     }
     $("#performanceoutput").hide();

@@ -109,6 +109,7 @@ class ConvertEvaluation():
     1 - Success /OK
     2 - Warnings
     3 - Not started
+    4 - Information
 
     '''
     def __init__(self):
@@ -199,10 +200,16 @@ class ConvertEvaluation():
 
                 # Reproject the file. 
                 if schemavalidates and featuresvalidate:
-                    reprojectedfile = myFileOps.reprojectFile(filepath)
-                    
-                    self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
+                    reprojectedfile, hasReprojErrors = myFileOps.reprojectFile(filepath)
+
+                    if hasReprojErrors:
+                        self.opstatus.set_status(stage=4, status=4, statustext ="There were errors in reprojecting some features, they are removed from output.")
+                      
+                    else: 
+                        self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
+
                     self.opstatus.add_success(stage=4, msg = "Reprojected file successfully written successfully")
+
                     simplifiedfile, bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
                     allBounds.append(bounds)
                     try:
@@ -344,9 +351,9 @@ class ConvertEvaluation():
                             self.opstatus.add_info(stage=7, msg = "No %s features in evaluation file." % k)
                 
                 if max(timetaken) > 4.0:
-                    self.opstatus.set_status(stage=7, status=2, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
+                    self.opstatus.set_status(stage=7, status=0, statustext= "Your file is either too large or is taking too much time to process, it is recommended that you reduce the features or simplify them.")
                 elif geometrysuccess ==0: 
-                    self.opstatus.set_status(stage=7, status=2, statustext= "Your file has topology and geometry errors. Please fix them and try again. ")
+                    self.opstatus.set_status(stage=7, status=0, statustext= "Your file has topology and geometry errors. Please fix them and try again. ")
                 else:
                     self.opstatus.set_status(stage=7, status=1)
         else:

@@ -19,6 +19,7 @@ class ShapefileHelper():
 	def __init__(self,opstatus):
 		self.logger = logging.getLogger("evals logger")
 		self.opstatus = opstatus
+		self.reprojectErrors = False
 		
 	def get_output_fname(self,fname, new_suffix, destdirectory= None):
 		path = os.path.basename(fname)
@@ -110,13 +111,15 @@ class ShapefileHelper():
 		except Exception, e:
 		    # Writing untransformed features to a different shapefile
 		    # is another option.
-		    self.logger.error(
-		        "Error transforming record %s:", rec)
-		    return None
+			self.reprojectErrors = True
+			self.logger.error(
+			    "Error transforming record.")
+			return None
 
 	def clean_geom(self,rec):
 		# Ensure that record geometries are valid and "clean".
 		# Returns a record or None.
+
 		try:
 		    geom = shape(rec['geometry'])
 		    if not geom.is_valid:
@@ -129,14 +132,15 @@ class ShapefileHelper():
 		except Exception, e:
 		    # Writing uncleanable features to a different shapefile
 		    # is another option.
-			
-			self.opstatus.add_warning(stage=4, msg = "Error in cleaning a record in the file")
+			self.reprojectErrors = True
+			self.opstatus.add_warning(stage=4, msg = "Error in reprojecting record in the file, please check for geometry errors and reproject to EPSG:4326 in GIS and try again.")
 			# self.logger.error(
 		        # "Error cleaning record %s:", e)
 			
 			return None
 
 	def reproject_to_4326(self, shape_fname, outputdirectory):
+		
 		output = self.get_output_fname(shape_fname, '_4326', outputdirectory)
 		with fiona.open(shape_fname, "r") as source:
 			with fiona.open(
@@ -168,7 +172,7 @@ class ShapefileHelper():
 				sink.writerecords(results)
 				
 				
-		return output
+		return output, self.reprojectErrors
 				
 	def validateSchema(self, schema):
 		try: 
@@ -209,7 +213,7 @@ class FileOperations():
 			schema = allfeats.schema
 			# get the crs
 			crs = allfeats.crs
-			if (crs['init'] == 'epsg:4326'):
+			if (('init' in crs) and (crs['init'] == 'epsg:4326')):
 				reprojected_fname= filepath
 			else:
 					self.logger.info("Reprojecting file")
