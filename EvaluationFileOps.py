@@ -208,6 +208,7 @@ class FileOperations():
 
 
     def reprojectFile(self, filepath):
+    	reprojectionErrors = False
         with fiona.open(filepath) as allfeats:
 			# get the schema
 			schema = allfeats.schema
@@ -218,11 +219,10 @@ class FileOperations():
 			else:
 					self.logger.info("Reprojecting file")
 					self.opstatus.add_info(stage=4, msg = "Checking projection..")
-				
 					self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
-					reprojected_fname  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
+					reprojected_fname, reprojectionErrors  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
 
-        return reprojected_fname
+        return reprojected_fname, reprojectionErrors
         
     def simplifyReprojectedFile(self, reprojectedfilepath):    
         # simplify reprojected file

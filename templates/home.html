@@ -386,7 +386,7 @@
             // show the download button
             var p = $('<p>', {
                 class: 'subtitle',
-                html: "Your Shapefile can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project. Please review the analysis for warning or information messages.",
+                html: "Your Shapefile can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project. Please review the analysis for warning or information messages.   ",
             }).appendTo("#opresult");
             var p = $('<div>', {
                 class: 'subtitle',
@@ -410,7 +410,7 @@
                 console.error('Console.save: No data')
                 return;
             }
-    if(!filename) filename = filename +'.geojson'
+    if(!filename) filename = 'convertedevaluation.geojson'
     if(typeof data === "object"){
                 data = JSON.stringify(data, undefined, 4)
             }

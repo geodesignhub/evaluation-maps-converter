@@ -204,7 +204,6 @@ class ConvertEvaluation():
 
                     if hasReprojErrors:
                         self.opstatus.set_status(stage=4, status=4, statustext ="There were errors in reprojecting some features, they are removed from output.")
-                      
                     else: 
                         self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
 
