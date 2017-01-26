@@ -214,7 +214,7 @@
                 var form_data = new FormData($('#upload-file')[0]);
                 var promise = $.ajax({
                     type: 'POST',
-                    url: '/upload',
+                    url: '/upload/',
                     username: 'uploads',
                     password: 'secretpassword',
                     data: form_data,
