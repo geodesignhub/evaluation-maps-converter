@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. It is recommended that you use GIS software to reproject your file to <a href="http://epsg.io/4326" target="_blank">EPSG:4326</a> before uploading.</p>
+<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. It is recommended that you use GIS software to reproject your file to <a href="http://epsg.io/4326" target="_blank">EPSG:4326</a>    before uploading.</p>
 <table>
     <thead>
     </thead>
@@ -38,9 +38,9 @@
                 <td width="50%">
                     <hr>
                     <h3>Output </h3>
-
+                    <div id="opmap">
+                    </div>
                     <div id="opresult">
-
                     </div>
                 </td>
                 <td></td>
@@ -230,10 +230,36 @@
                     humane.log("Processing received data..", {
                         addnCls: 'humane-flatty-info'
                     });
-                    processserverdata(JSON.parse(data.status));
+                    var dataisOK = processserverdata(JSON.parse(data.status));
                     for (var fname in data.gj) {
                         var curgj = data.gj[fname];
                         gj = curgj;
+                        if (dataisOK) {
+                            if (mapInitialized === false) {
+                                map = L.map('opmap').setView([51.505, -0.09], 13);
+                                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                                }).addTo(map);
+                                gjL = new L.featureGroup().addTo(map);
+                                mapInitialized = true;
+                            } else {
+                                gjL.clearLayers();
+                            }
+
+                            function style(feature) {
+                                return {
+                                    fillColor: getColor(feature.properties.areatype),
+                                    opacity: 0.7,
+                                    fillOpacity: 0.7,
+                                    weight: 0,
+                                };
+                            }
+                            gjlayer = L.geoJson(gj, {
+                                style: style
+                            }).addTo(gjL);
+                            bounds = gjlayer.getBounds();
+                            map.fitBounds(bounds);
+                        }
                     }
 
                     humane.log("Data Processed..", {
@@ -248,7 +274,6 @@
                     });
                     console.log('error');
                     console.log(data);
-
                 });
             }
         });
@@ -257,6 +282,17 @@
     $(".stageresultcontrol").click(function() {
         $(".resultdetails").toggle();
     });
+
+    function getColor(type) {
+
+        return type === 'red2' ? '#bd0026' :
+            type === 'red' ? '#f03b20' :
+            type === 'yellow' ? '#FFFF00' :
+            type === 'green' ? '#74c476' :
+            type === 'green2' ? '#31a354' :
+            type === 'green3' ? '#006d2c' :
+            '#808080';
+    }
 
     function generateStatusDiv(status) {
         switch (status) {
@@ -287,6 +323,9 @@
         }
     }
     var gj;
+    var gjL;
+    var mapInitialized = false;
+    var map;
 
     function processMessages(msgdata) {
         function sortByKey(array, key) {
@@ -384,6 +423,10 @@
         if (dataOK) {
             $("#opresult").html('');
             // show the download button
+            // show and load the map.
+            $("#opmap").show();
+
+
             var p = $('<p>', {
                 class: 'subtitle',
                 html: "Your Shapefile can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project. Please review the analysis for warning or information messages.   ",
@@ -395,31 +438,35 @@
 
         } else {
             $("#opresult").html('');
+            $("#opmap").hide();
             var p = $('<p>', {
                 class: 'subtitle text-error',
                 html: "There are issues with your Shapefile, therefore the output GeoJSON is not available, please review the analysis below and try again.",
             }).appendTo("#opresult");
 
         }
+        return dataOK;
 
     }
 
-    (function(console){
-    console.save = function(data, filename){
-    if(!data) {
+    (function(console) {
+        console.save = function(data, filename) {
+            if (!data) {
                 console.error('Console.save: No data')
                 return;
             }
-    if(!filename) filename = 'convertedevaluation.geojson'
-    if(typeof data === "object"){
+            if (!filename) filename = 'convertedevaluation.geojson'
+            if (typeof data === "object") {
                 data = JSON.stringify(data, undefined, 4)
             }
-    var blob = new Blob([data], {type: 'text/json'}),
-                e    = document.createEvent('MouseEvents'),
-                a    = document.createElement('a')
-    a.download = filename
+            var blob = new Blob([data], {
+                    type: 'text/json'
+                }),
+                e = document.createEvent('MouseEvents'),
+                a = document.createElement('a')
+            a.download = filename
             a.href = window.URL.createObjectURL(blob)
-            a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+            a.dataset.downloadurl = ['text/json', a.download, a.href].join(':')
             e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
             a.dispatchEvent(e)
         }
