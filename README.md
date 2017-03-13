@@ -6,10 +6,7 @@ Geodesign Hub uses GeoJSON and [EPSG4326](http://espg.io/4326) projection and th
 
 It is Python Flask App that is deployed on Heroku.
 
-![alt text][logo]
-
-[logo]: http://i.imgur.com/fFXpocE.png "Evaluation Files Converter"
-
+![initial](https://i.imgur.com/OgzcM6F.png) 
 
 ###Before you start
 You will need a Evaluation map already prepared for your study area. Evaluation maps can be created using GIS tools. Please review evaluation map creation in the [step-by-step guide for data preparation](https://community.geodesignhub.com/t/step-by-step-guide-to-setting-up-data-for-your-project/45) for a project on Geodesign Hub. They are built in five or three colors using standard GIS modelling tools. 
@@ -28,25 +25,18 @@ Evaluation Maps produced by GIS tools as Shapefiles can be very large. In additi
 
 Please review the [data simplification](https://community.geodesignhub.com/t/simplifying-gis-maps-and-features/47) article to understand the file size and performance requirements for the tool.
 
-###License
-The MIT License (MIT)
+###More Images
 
-Copyright (c) 2015 Hrishikesh Ballal
+![output](https://i.imgur.com/gcY8R34.png)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Checking input file and zip contents
+![outptu2](https://i.imgur.com/spe1zS8.png)
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Checking Schema and file projection
+![output3](https://i.imgur.com/spUlp7G.png)
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Simplify features and convert to GeoJSON
+![output4](https://i.imgur.com/bieYjws.png)
+
+File Statistics and performance
+![output5](https://i.imgur.com/NQ4ahzs.png)
