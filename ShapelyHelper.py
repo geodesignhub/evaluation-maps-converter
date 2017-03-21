@@ -1,5 +1,6 @@
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import shape, mapping, shape, asShape
+from shapely.validation import explain_validity
 from shapely.geometry import MultiPolygon, MultiPoint, MultiLineString
 from shapely.ops import unary_union
 import json
@@ -95,8 +96,9 @@ class GeomOperations():
         try:
             curShape = asShape(geom)
         except Exception as e:
-            self.logger.error(explain_validity(curShape))
+            self.logger.error("Error in converting to Shape %s" %geom)
             errorCounter+=1
+            curShape = None
         return curShape, errorCounter
 
 
@@ -112,7 +114,8 @@ class ShapesFactory():
         try:
             curShape = asShape(geom)
         except Exception as e:
-            self.logger.error(explain_validity(curShape))
+            curShape = None
+            self.logger.error("Error in converting to Shape %s" %geom)
 
         return curShape
         
