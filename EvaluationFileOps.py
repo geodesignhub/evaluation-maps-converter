@@ -229,7 +229,7 @@ class FileOperations():
         with fiona.open(reprojectedfilepath) as allfeats:
 			crs = allfeats.crs
 			bounds = allfeats.bounds
-			simplification = {'highest': 0.1,'high': 0.05, 'medium':0.01, 'low':0.001, 'default':0.0001,'none':0}
+			simplification = {'highest': 0.01,'high': 0.005, 'medium':0.001, 'low':0.0005, 'default':0.0001,'none':0}
 			# simplify the file
 			allGeoms = []
 			errorCounter = 0
