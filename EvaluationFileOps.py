@@ -244,9 +244,17 @@ class FileOperations():
 			for curFeat in allfeats:
 			    s = self.myShapeFactory.genFeature(curFeat['geometry'])
 			    if s:
-			        allGeoms.append({'shp':s, 'areatype':curFeat['properties']['areatype']})
+					area = s.area
+					print area
+					allGeoms.append({'area': area, 'shp':s, 'areatype':curFeat['properties']['areatype']})
 			simshp = []
+			# filter out small areas
+			maxareadict =  max(allGeoms, key=lambda x:x['area'])
+			maxarea =  maxareadict['area']
+			tenpercent = (maxarea * 0.01)
 
+			allGeoms = [i for i in allGeoms if i['area'] > tenpercent]
+			
 			for curGeom in allGeoms:
 			    try:
 			        assert simplificationlevel != 'none'
