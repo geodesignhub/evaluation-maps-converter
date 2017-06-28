@@ -7,7 +7,7 @@ working = {
 	"directory":"working"
 }
 
-simplificationlevel = 'low' # other options are highest, high, medium and low or none
+simplificationlevel = 'default' # other options are highest, high, medium and low or none
 
 geojsonoutput ={
 	"directory": "output"

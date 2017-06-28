@@ -245,7 +245,7 @@ class FileOperations():
 			    s = self.myShapeFactory.genFeature(curFeat['geometry'])
 			    if s:
 					area = s.area
-					print area
+					# print area
 					allGeoms.append({'area': area, 'shp':s, 'areatype':curFeat['properties']['areatype']})
 			simshp = []
 			# filter out small areas
