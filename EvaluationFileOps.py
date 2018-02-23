@@ -248,12 +248,12 @@ class FileOperations():
 					# print area
 					allGeoms.append({'area': area, 'shp':s, 'areatype':curFeat['properties']['areatype']})
 			simshp = []
-			# filter out small areas
+			# # filter out small areas
 			maxareadict =  max(allGeoms, key=lambda x:x['area'])
 			maxarea =  maxareadict['area']
-			tenpercent = (maxarea * 0.01)
+			areathreshold = (maxarea * 0.005)
 
-			allGeoms = [i for i in allGeoms if i['area'] > tenpercent]
+			allGeoms = [i for i in allGeoms if i['area'] > areathreshold]
 			
 			for curGeom in allGeoms:
 			    try:
