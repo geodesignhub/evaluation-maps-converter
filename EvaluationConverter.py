@@ -82,7 +82,7 @@ class OpStatus():
 
     def get_all_status(self):
         allstatus = {}
-        for stage, results in self.stages.iteritems():
+        for stage, results in self.stages.items():
             allstatus[stage] = results['status']
         return allstatus
 
@@ -302,7 +302,7 @@ class ConvertEvaluation():
                     start_time = time.time()
 
                     # create a union and write to SqliteDict this is to test caching performance.   
-                    for k in colorDict.iterkeys():
+                    for k in colorDict.keys():
                         u = myGeomOps.genUnaryUnion(colorList=colorDict[k])
                         curCacheKey = cacheKey + '-' + k
                         if curCacheKey not in s.keys() and u:
@@ -312,7 +312,7 @@ class ConvertEvaluation():
                     timetaken.append(float(time.time() - start_time))
                     self.opstatus.set_statustext(stage=7, msg = "Processing took %.4f seconds " % float(time.time() - start_time))
                     # -- write to union json file
-                    for k in colorDict.iterkeys():
+                    for k in colorDict.keys():
                         curCacheKey = cacheKey+ '-' + k
                         try:
                             u = s[curCacheKey]
@@ -330,7 +330,7 @@ class ConvertEvaluation():
                             with open(uf, 'w') as outFile:
                                 json.dump(outputJSON , outFile)
                     # -- write to intersection json file
-                    for k in colorDict.iterkeys():
+                    for k in colorDict.keys():
                         curCacheKey = cacheKey+ '-' + k
                         self.logger.debug("%s intersection starts" % k)
                         # self.opstatus.add_debug(stage=7, msg = "%s intersection starts" % k)

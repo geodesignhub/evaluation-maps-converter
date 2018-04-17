@@ -12,7 +12,11 @@ import logging
 import ShapelyHelper
 from fiona import collection
 import functools
-import itertools
+try:
+    from itertools import imap
+except ImportError:
+    # Python 3...
+    imap=map
 # import numpy as np
 
 class ShapefileHelper():
@@ -108,7 +112,7 @@ class ShapefileHelper():
 		        new_coords.append(zip(x2, y2))
 		    rec['geometry']['coordinates'] = new_coords
 		    return rec
-		except Exception, e:
+		except Exception as e:
 		    # Writing untransformed features to a different shapefile
 		    # is another option.
 			self.reprojectErrors = True
@@ -129,7 +133,7 @@ class ShapefileHelper():
 		        geom = clean
 		    rec['geometry'] = mapping(geom)
 		    return rec
-		except Exception, e:
+		except Exception as e:
 		    # Writing uncleanable features to a different shapefile
 		    # is another option.
 			self.reprojectErrors = True
@@ -161,12 +165,12 @@ class ShapefileHelper():
 						Proj(sink.crs) ) 
 					)
 				# Transform the input records, using imap to loop/generate.
-				results = itertools.imap(func, source)
+				results = map(func, source)
 				# The transformed record generator is used as input for a
 				# "cleaning" generator.
-				results = itertools.imap(self.clean_geom, results)
+				results = map(self.clean_geom, results)
 				# Remove null records from the results
-				results = itertools.ifilter(bool, results)
+				results = filter(bool, results)
 				# Finally we write records from the last generator to the output
 				# "sink" file.
 				sink.writerecords(results)
@@ -196,8 +200,7 @@ class ShapefileHelper():
 
 
 class FileOperations():
-
-    def __init__(self, SOURCE_FILE_SHARE, OUTPUT_SHARE, WORKING_SHARE, opstatus):
+	def __init__(self, SOURCE_FILE_SHARE, OUTPUT_SHARE, WORKING_SHARE, opstatus):
 		self.SOURCE_FILE_SHARE = SOURCE_FILE_SHARE
 		self.WORKING_SHARE = WORKING_SHARE
 		self.OUTPUT_SHARE = OUTPUT_SHARE
@@ -207,9 +210,9 @@ class FileOperations():
 		self.myShapeFactory = ShapelyHelper.ShapesFactory()
 
 
-    def reprojectFile(self, filepath):
-    	reprojectionErrors = False
-        with fiona.open(filepath) as allfeats:
+	def reprojectFile(self, filepath):
+		reprojectionErrors = False
+		with fiona.open(filepath) as allfeats:
 			# get the schema
 			schema = allfeats.schema
 			# get the crs
@@ -222,11 +225,11 @@ class FileOperations():
 					self.opstatus.add_info(stage=4, msg = "Reprojecting file to EPSG 4326 projection")
 					reprojected_fname, reprojectionErrors  = self.myShpFileHelper.reproject_to_4326(filepath, self.WORKING_SHARE)
 
-        return reprojected_fname, reprojectionErrors
-        
-    def simplifyReprojectedFile(self, reprojectedfilepath):    
+		return reprojected_fname, reprojectionErrors
+
+	def simplifyReprojectedFile(self, reprojectedfilepath):    
         # simplify reprojected file
-        with fiona.open(reprojectedfilepath) as allfeats:
+		with fiona.open(reprojectedfilepath) as allfeats:
 			crs = allfeats.crs
 			bounds = allfeats.bounds
 			simplification = {'highest': 0.01,'high': 0.005, 'medium':0.001, 'low':0.0005, 'default':0.0001,'none':0}
@@ -242,8 +245,8 @@ class FileOperations():
 			self.logger.info("Simplifying with simplification level : %s " % config.simplificationlevel)
 			self.opstatus.add_info(stage=5, msg = "Simplifying with simplification level : %s " % config.simplificationlevel)
 			for curFeat in allfeats:
-			    s = self.myShapeFactory.genFeature(curFeat['geometry'])
-			    if s:
+				s = self.myShapeFactory.genFeature(curFeat['geometry'])
+				if s:
 					area = s.area
 					# print area
 					allGeoms.append({'area': area, 'shp':s, 'areatype':curFeat['properties']['areatype']})
@@ -282,4 +285,4 @@ class FileOperations():
 				self.opstatus.set_status(stage=5, status=0, statustext ="Error in writing simplified shapefile")
 				self.opstatus.add_error(stage=5, msg = "Error in writing simplified shapefile" %e)
 
-        return sims, bounds
+		return sims, bounds

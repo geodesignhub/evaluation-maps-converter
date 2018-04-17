@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'input'
 ALLOWED_EXTENSIONS = set(['zip'])
 
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \

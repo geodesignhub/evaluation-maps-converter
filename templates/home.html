@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. It is recommended that you use GIS software to reproject your file to <a href="http://epsg.io/4326" target="_blank">EPSG:4326</a>    before uploading.</p>
+<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. The maximum upload size is capped at 2MB</p>
 <table>
     <thead>
     </thead>
@@ -269,7 +269,7 @@
                 });
                 promise.fail(function(data) {
 
-                    humane.log("Error in receiving data, you can try to refresh the page and reupload.", {
+                    humane.log("Error in receiving data, Please check the filesize.", {
                         addnCls: 'humane-flatty-error'
                     });
                     console.log('error');
