@@ -206,7 +206,7 @@ class ConvertEvaluation():
                 with fiona.open(filepath,driver='GPKG') as curfile:
 
                     schema = curfile.schema
-                    schemavalidates = myShpFileHelper.validateSchema(schema, curfile[1])    
+                    schemavalidates = myShpFileHelper.validateSchema(schema)    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
                 
                 try: 

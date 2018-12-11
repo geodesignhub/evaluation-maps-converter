@@ -143,7 +143,7 @@ class GeopackageHelper():
 				
 		return output, self.reprojectErrors
 				
-	def validateSchema(self, schema, samplegeometry):
+	def validateSchema(self, schema):
 
 		try: 
 			assert schema['geometry'] in ['Polygon' , 'MultiPolygon']
