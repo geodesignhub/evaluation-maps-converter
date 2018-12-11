@@ -245,6 +245,8 @@
                     humane.log("Processing received data..", {
                         addnCls: 'humane-flatty-info'
                     });
+                    
+                    $("#loadingimg").hide();
                     if (data.opstatus ==1 ){
                     var dataisOK = processserverdata(JSON.parse(data.status));
                     for (var fname in data.gj) {
@@ -282,9 +284,12 @@
                         addnCls: 'humane-flatty-success'
                     });
                     $("#performanceoutput").show();
+                    
+                    $("#loadingimg").hide();
                     }
                     else{
-                        
+                    
+                        $("#loadingimg").hide();
                     humane.log(data.msg, {
                         addnCls: 'humane-flatty-warning'
                     });
