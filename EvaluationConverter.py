@@ -203,18 +203,18 @@ class ConvertEvaluation():
                 filepath = os.path.join(self.SOURCE_FILE_SHARE, f)
 
                 # validate features and schema
-                with fiona.open(filepath,driver='GPKG') as curfile:
+                with fiona.open(filepath, driver='GPKG') as curfile:
 
                     schema = curfile.schema
                     schemavalidates = myShpFileHelper.validateSchema(schema)    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
-                
+                print(schemavalidates, featuresvalidate)
                 try: 
                     assert schemavalidates
                     self.logger.info("Every feature is a polygon")
                     self.opstatus.add_info(stage=3, msg = "Every feature is a polygon")
                 except AssertionError as e:
-                    self.logger.error("Your file has features that are not 'Polyons', please ensure that all 3D Polygons etc. are removed.")
+                    self.logger.error("Your file has features that are not 'Polygons', please ensure that all 3D Polygons etc. are removed.")
                     self.opstatus.add_error(stage=3, msg = "Input Geopackage does not have the correct geometry.")
                     
                 try: 

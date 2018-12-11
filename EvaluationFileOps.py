@@ -159,7 +159,6 @@ class GeopackageHelper():
 		checkDict = {'eval':['red', 'green', 'yellow', 'green2','green3']}
 		toCheck = checkDict[evalorimpact]
 		for f in allfeats:
-
 			if 'areatype' in f['properties'].keys() and f['properties']['areatype'] in toCheck:
 				validated = True
 			else:
