@@ -11,7 +11,7 @@ import EvaluationConverter
 app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = 'input'
-ALLOWED_EXTENSIONS = set(['zip'])
+ALLOWED_EXTENSIONS = set(['gpkg'])
 
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
@@ -51,23 +51,31 @@ def api_root():
 def upload_file():
     op = {}
     if request.method == 'POST':
+        
         if 'file' not in request.files:
             op['msg'] = 'No file part'
+            op['status']=0
         file = request.files['file']
 
         if file.filename == '':
             op['msg']="No File Selected"
+            op['status']=0
 
-        if not allowed_file(file.filename):
-            op['msg']="Incorrect file Extension"
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
             os.mkdir(app.config['UPLOAD_FOLDER'])
-        if file and allowed_file(file.filename):
+            
+        if not allowed_file(file.filename):
+      
+            op['msg']="Incorrect file Extension"
+            op['status']=0
+        elif file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             op['msg']="File Uploaded successfully"
             
             myEvalConverter = EvaluationConverter.ConvertEvaluation()
+            ""
             gj, status = myEvalConverter.convert()
             op['gj'] = gj
             op['status'] = status

@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">Evaluation map Shapefiles cannot be directly uploaded to Geodesign Hub. This tool converts the Shapefile to GeoJSON and also tests performance. The maximum upload size is capped at 2MB</p>
+<p class="subtitle">This tool converts a vector evaluation GeoPackage to GeoJSON and also tests performance. The maximum upload size is capped at 2MB. Geopackage is a Vector file format, for more information please see <a href="http://switchfromshapefile.org" target="_blank">here</a>. </p>
 <table>
     <thead>
     </thead>
@@ -9,20 +9,26 @@
                 <form id="upload-file" class="form-style-7" method="post" enctype="multipart/form-data">
                     <ul>
                         <li>
-                            <label for="file">Select a Evaluation Shapefile</label>
-                            <input name="file" type="file" accept=".zip">
-                            <span>All Shapefile contents must be in a .zip file</span>
+                            <label for="file">Select a Evaluation Geopackage</label>
+                            <input name="file" type="file" accept=".gpkg">
+                            <span>File must be Geopackage in a .gpkg format</span>
                         </li>
                         <li>
-                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation Shapefile</button>
+                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation
+                                GeoPackage</button>
                         </li>
                     </ul>
                 </form>
             </td>
 
             <td>
+               
 
             </td>
+        </tr>
+        <tr>
+            <td width="100%"><img id="loadingimg" src='{{ url_for('static', filename='loader.gif') }}'></td>
+            
         </tr>
     </tbody>
 </table>
@@ -61,13 +67,14 @@
                 <tr>
                     <td>
                         <hr>
-                        <h3>1. Input File <small>Check if the file can be successfully unzipped</small> </h3>
+                        <h3>1. Input File <small>Check if the file can be successfully read</small> </h3>
 
                         <div class="stage1result">
                             <p id='stage1statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage1msgdetails"></code></pre></div>
+                                <pre><code id="stage1msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -79,13 +86,14 @@
                 <tr>
                     <td>
                         <hr>
-                        <h3>2. Unzipped Shapefile <small>Check if there is a Shapefile in the zip file</small> </h3>
+                        <h3>2. Unzipped GeoPackage <small>Check if there is a GeoPackage is valid</small> </h3>
 
                         <div class="stage2result">
                             <p id='stage2statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage2msgdetails"></code></pre></div>
+                                <pre><code id="stage2msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -103,7 +111,8 @@
                             <p id='stage3statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage3msgdetails"></pre></div>
+                                <pre><code id="stage3msgdetails"></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -123,7 +132,8 @@
                             <p id='stage4statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage4msgdetails"></code></pre></div>
+                                <pre><code id="stage4msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -143,7 +153,8 @@
                             <p id='stage5statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage5msgdetails"></code></pre></div>
+                                <pre><code id="stage5msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -162,7 +173,8 @@
                             <p id='stage6statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage6msgdetails"></code></pre></div>
+                                <pre><code id="stage6msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -181,7 +193,8 @@
                             <p id='stage7statustext'></p>
                             <p class="stageresultcontrol">Show/Hide details..</p>
                             <div class="resultdetails codeStyle computerGreen">
-                                <pre><code id="stage7msgdetails"></code></pre></div>
+                                <pre><code id="stage7msgdetails"></code></pre>
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -201,15 +214,16 @@
 {% endblock %} {% block footer %}
 <script type="text/javascript">
     var filename;
-    $(function() {
+    $(function () {
 
-        $('#upload-file-btn').click(function() {
+        $('#upload-file-btn').click(function () {
             if ($('input[name=file]').get(0).files.length === 0) {
 
                 humane.log("No files selected", {
                     addnCls: 'humane-flatty-error'
                 });
             } else {
+                $("#loadingimg").show();
                 filename = $('input[name=file]').get(0).files[0].name.split('.')[0];
                 var form_data = new FormData($('#upload-file')[0]);
                 var promise = $.ajax({
@@ -226,15 +240,19 @@
                 humane.log("Uploading file to server..", {
                     addnCls: 'humane-flatty-info'
                 });
-                promise.done(function(data) {
+                promise.done(function (data) {
                     humane.log("Processing received data..", {
                         addnCls: 'humane-flatty-info'
                     });
                     var dataisOK = processserverdata(JSON.parse(data.status));
-                    for (var fname in data.gj) {
-                        var curgj = data.gj[fname];
-                        gj = curgj;
-                        if (dataisOK) {
+                    
+                    if (dataisOK) {
+                        $("#loadingimg").hide();
+                        for (var fname in data.gj) {
+                            var curgj = data.gj[fname];
+                            gj = curgj;
+
+
                             if (mapInitialized === false) {
                                 map = L.map('opmap').setView([51.505, -0.09], 13);
                                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -260,14 +278,22 @@
                             bounds = gjlayer.getBounds();
                             map.fitBounds(bounds);
                         }
-                    }
-
+                        
                     humane.log("Data Processed..", {
                         addnCls: 'humane-flatty-success'
                     });
                     $("#performanceoutput").show();
+                    }
+                    else{
+                        $("#loadingimg").hide();
+                        humane.log("Error in processing your file, check the file extension"), {
+                            addnCls: 'humane-flatty-warning'
+                        }
+                    }
+
                 });
-                promise.fail(function(data) {
+                promise.fail(function (data) {
+                    $("#loadingimg").hide();
 
                     humane.log("Error in receiving data, Please check the filesize.", {
                         addnCls: 'humane-flatty-error'
@@ -279,7 +305,7 @@
         });
     });
     $(".resultdetails").hide();
-    $(".stageresultcontrol").click(function() {
+    $(".stageresultcontrol").click(function () {
         $(".resultdetails").toggle();
     });
 
@@ -326,10 +352,11 @@
     var gjL;
     var mapInitialized = false;
     var map;
+    $("#loadingimg").hide();
 
     function processMessages(msgdata) {
         function sortByKey(array, key) {
-            return array.sort(function(a, b) {
+            return array.sort(function (a, b) {
                 var x = a[key];
                 var y = b[key];
                 return ((x < y) ? -1 : ((x > y) ? 1 : 0));
@@ -378,79 +405,84 @@
     }
 
     function processserverdata(sdata) {
-        // loop over stages 
-        var dataOK = true;
-        for (var stageid in sdata) {
-            var stagedata = sdata[stageid];
-            var stageresult;
-            var textclass;
+        // loop over stages
+        var dataOK = false;
+        if (sdata == 0) {
+            dataOK = false;
+        } else {
+            dataOK = true;
+            for (var stageid in sdata) {
+                var stagedata = sdata[stageid];
+                var stageresult;
+                var textclass;
 
-            // $(".stage" + stageid + "resultcontent").html('');
-            // $("#stage" + stageid + "statustext").html('');
-            if (stagedata.status === 1) {
-                stageresult = 'success';
-                textclass = 'text-success';
-            } else if (stagedata.status === 2) {
-                stageresult = 'warning';
-                textclass = 'text-warning';
-                dataOK = false;
-            } else if (stagedata.status === 0) {
-                stageresult = 'error';
-                textclass = 'text-error';
-                dataOK = false;
-            } else if (stagedata.status === 4) {
-                stageresult = 'info';
-                textclass = 'text-info';
-                dataOK = true;
-            };
-            var h = generateStatusDiv(stageresult);
+                // $(".stage" + stageid + "resultcontent").html('');
+                // $("#stage" + stageid + "statustext").html('');
+                if (stagedata.status === 1) {
+                    stageresult = 'success';
+                    textclass = 'text-success';
+                } else if (stagedata.status === 2) {
+                    stageresult = 'warning';
+                    textclass = 'text-warning';
+                    dataOK = false;
+                } else if (stagedata.status === 0) {
+                    stageresult = 'error';
+                    textclass = 'text-error';
+                    dataOK = false;
+                } else if (stagedata.status === 4) {
+                    stageresult = 'info';
+                    textclass = 'text-info';
+                    dataOK = true;
+                };
+                var h = generateStatusDiv(stageresult);
 
-            $(".stage" + stageid + "resultcontent").html(h);
-            $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
-            $("#stage" + stageid + "statustext").html(stagedata.statustext);
-            var allmessages = processMessages(stagedata);
-            var msglen = allmessages.length;
-            $("#stage" + stageid + "msgdetails").html("");
-            for (var x = 0; x < msglen; x++) {
-                var curmsg = allmessages[x];
-                var html = '<span class="' + curmsg['class'] + '"> ' + curmsg['msg'] + '</span><br>';
-                $("#stage" + stageid + "msgdetails").append(html);
+                $(".stage" + stageid + "resultcontent").html(h);
+                $("#stage" + stageid + "statustext").removeClass().addClass(textclass);
+                $("#stage" + stageid + "statustext").html(stagedata.statustext);
+                var allmessages = processMessages(stagedata);
+                var msglen = allmessages.length;
+                $("#stage" + stageid + "msgdetails").html("");
+                for (var x = 0; x < msglen; x++) {
+                    var curmsg = allmessages[x];
+                    var html = '<span class="' + curmsg['class'] + '"> ' + curmsg['msg'] + '</span><br>';
+                    $("#stage" + stageid + "msgdetails").append(html);
+                }
+
             }
 
-        }
-
-        $("#opcont").show();
-        if (dataOK) {
-            $("#opresult").html('');
-            // show the download button
-            // show and load the map.
-            $("#opmap").show();
+            $("#opcont").show();
+            if (dataOK) {
+                $("#opresult").html('');
+                // show the download button
+                // show and load the map.
+                $("#opmap").show();
 
 
-            var p = $('<p>', {
-                class: 'subtitle',
-                html: "Your Shapefile can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesign Hub project. Please review the analysis for warning or information messages.   ",
-            }).appendTo("#opresult");
-            var p = $('<div>', {
-                class: 'subtitle',
-                html: "<br><button class='turquoise-flat-button download' id='upload-file-btn' onclick='downloadGJ()' type='button'>Download GeoJSON</button>",
-            }).appendTo("#opresult");
+                var p = $('<p>', {
+                    class: 'subtitle',
+                    html: "Your Geopackage can now be downloaded as a GeoJSON file and can be uploaded as a Evaluation map in a Geodesignhub project. Please review the analysis for warning or information messages.   ",
+                }).appendTo("#opresult");
+                var p = $('<div>', {
+                    class: 'subtitle',
+                    html: "<br><button class='turquoise-flat-button download' id='upload-file-btn' onclick='downloadGJ()' type='button'>Download GeoJSON</button>",
+                }).appendTo("#opresult");
 
-        } else {
-            $("#opresult").html('');
-            $("#opmap").hide();
-            var p = $('<p>', {
-                class: 'subtitle text-error',
-                html: "There are issues with your Shapefile, therefore the output GeoJSON is not available, please review the analysis below and try again.",
-            }).appendTo("#opresult");
+            } else {
+                $("#opresult").html('');
+                $("#opmap").hide();
+                var p = $('<p>', {
+                    class: 'subtitle text-error',
+                    html: "There are issues with your Geopackage, therefore the output GeoJSON is not available, please review the analysis below and try again.",
+                }).appendTo("#opresult");
 
+            }
         }
         return dataOK;
 
     }
 
-    (function(console) {
-        console.save = function(data, filename) {
+    (function (console) {
+        console.save = function (data, filename) {
             if (!data) {
                 console.error('Console.save: No data')
                 return;

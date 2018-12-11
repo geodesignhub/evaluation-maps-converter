@@ -5,11 +5,12 @@ MarkupSafe
 Werkzeug
 geojson
 gunicorn
-itsdangerous==0.24
+itsdangerous
 requests
 sqlitedict
 pyproj
 shapely
+rtree
 numpy
 cligj>=0.4
 fiona

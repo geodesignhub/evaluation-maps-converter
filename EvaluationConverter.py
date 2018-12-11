@@ -8,7 +8,7 @@ from shapely.validation import explain_validity
 from shapely import speedups
 if speedups.available:
         speedups.enable()   
-
+import sqlite3 as sqlite
 import fiona 
 import time
 import shutil
@@ -18,6 +18,7 @@ from sqlitedict import SqliteDict
 import os, sys
 from os import listdir
 from os.path import isfile, join
+import os.path as osp
 import logging
 import Colorer
 import zipfile
@@ -94,7 +95,7 @@ class ConvertEvaluation():
     '''
     There are seven stages to the process 
     1. Check if Zip file unzips properly
-    2. Check if there is a Shapefile in the zip
+    2. Check if there is a Geopackage in the zip
     3. Check if the features and schema is correct
     4. Reproject the file
     5. Simplify the file
@@ -121,8 +122,40 @@ class ConvertEvaluation():
         self.opstatus = OpStatus()
         
     def convert(self):
-        self.logger.info("Geodesign Hub Evaluations Converter")    
-        myShpFileHelper = EvaluationFileOps.ShapefileHelper(self.opstatus)
+        def isSQLite(filename):
+            """True if filename is a SQLite database
+            File is database if: (1) file exists, (2) length is non-zero,
+                                (3) can connect, (4) has sqlite_master table
+            """
+            # validate file exists
+            if not osp.isfile(filename):
+                return False
+            # is not an empty file
+            if not os.stat(filename).st_size:
+                return False
+            # can open a connection
+            try:
+                conn = sqlite.connect(filename)
+            except Exception as ae:
+                return False
+            # has sqlite_master
+            try:
+                result = conn.execute('pragma table_info(sqlite_master)').fetchall()
+                if len(result) == 0:
+                    conn.close()
+                    return False
+            except:
+                conn.close()
+                return False
+
+            # looks like a good database
+            else:
+                conn.close()
+            
+            return True 
+
+        self.logger.info("Geodesignhub Evaluations Converter")    
+        myShpFileHelper = EvaluationFileOps.GeopackageHelper(self.opstatus)
         self.logger.info("Reading source files.. ")
         curPath = os.path.dirname(os.path.realpath(__file__))
         allBounds = []
@@ -135,88 +168,97 @@ class ConvertEvaluation():
         except AssertionError as e:
             self.logger.error("Source file directory does not exist, please check config.py for correct filename and directory")
         # Read the zip files
-        zipfiles = [f1 for f1 in listdir(self.SOURCE_FILE_SHARE) if (os.path.splitext(f1)[1] == '.zip')]
+
+
+        # # Geopackage has been read, read the data.
+
+        gpkgfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.gpkg'))]
+    
         ferror = False
-        for z in zipfiles:
+        for g in gpkgfiles:  
             try:
-                zip_ref = zipfile.ZipFile(os.path.join(self.SOURCE_FILE_SHARE,z), 'r')
-                zip_ref.extractall(self.SOURCE_FILE_SHARE)
-                zip_ref.close()
-            except Exception as e:
+                assert isSQLite(os.path.join(self.SOURCE_FILE_SHARE, g))                
+            except AssertionError as e:
                 ferror = True
-                self.logger.error("Error in extracting zip file %s" %e)
+                self.logger.error("Error in reading gpkg file %s" %e)
+
+
+                
                 
         if ferror: 
-            self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading Zip file contents.")
-            self.opstatus.add_error(stage=1, msg = "Problems with your zip file, please make sure that it is not curropt.")
+            self.opstatus.set_status(stage=1, status=0, statustext ="Problem with opening and reading gpkg file contents.")
+            self.opstatus.add_error(stage=1, msg = "Problems with your gpkg file, please make sure that it is not curropt.")
         else:
-            self.opstatus.set_status(stage=1, status=1, statustext ="Zip file read without problems")
-            self.opstatus.add_success(stage=1, msg = "File contents unzipped successfully")
+            self.opstatus.set_status(stage=1, status=1, statustext ="gpkg file read without problems")
+            self.opstatus.add_success(stage=1, msg = "File contents read successfully")
             
-        # Zipfile has been unzipped, read the chapefiels.
-
-        inputfiles = [f for f in listdir(self.SOURCE_FILE_SHARE) if (isfile(os.path.join(self.SOURCE_FILE_SHARE, f)) and (os.path.splitext(f)[1] == '.shp'))]
         myFileOps = EvaluationFileOps.FileOperations(self.SOURCE_FILE_SHARE, self.OUTPUT_SHARE, self.WORKING_SHARE,self.opstatus)
         allGJ = {}
         geometrysuccess= 0
         reprojectstatus = 0
-        if inputfiles and len(inputfiles)==1:
-            self.opstatus.set_status(stage=2, status=1, statustext ="Shapefile was found in the archive")
-            self.opstatus.add_success(stage=2, msg = "Shapefile extracted successfully and contents read")
-            for f in inputfiles:
+        if (ferror == False) and gpkgfiles and len(gpkgfiles)==1:
+            self.opstatus.set_status(stage=2, status=1, statustext ="GeoPackage was found in the archive")
+            self.opstatus.add_success(stage=2, msg = "Geopackage extracted successfully and contents read")
+            for f in gpkgfiles:
                 filepath = os.path.join(self.SOURCE_FILE_SHARE, f)
+
                 # validate features and schema
-                with fiona.open(filepath) as curfile:
+                with fiona.open(filepath,driver='GPKG') as curfile:
+
                     schema = curfile.schema
-                    schemavalidates = myShpFileHelper.validateSchema(schema)    
+                    schemavalidates = myShpFileHelper.validateSchema(schema, curfile[1])    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
+                
+                try: 
+                    assert schemavalidates
+                    self.logger.info("Every feature is a polygon")
+                    self.opstatus.add_info(stage=3, msg = "Every feature is a polygon")
+                except AssertionError as e:
+                    self.logger.error("Your file has features that are not 'Polyons', please ensure that all 3D Polygons etc. are removed.")
+                    self.opstatus.add_error(stage=3, msg = "Input Geopackage does not have the correct geometry.")
                     
-                    try: 
-                        assert schemavalidates
-                        self.logger.info("Every feature is a polygon")
-                        self.opstatus.add_info(stage=3, msg = "Every feature is a polygon")
-                    except AssertionError as e:
-                        self.logger.error("Your file has features that are not 'Polyons', please ensure that all 3D Polygons etc. are removed.")
-                        self.opstatus.add_error(stage=3, msg = "Input Shapefile does not have the correct geometry.")
-                        
-                    try: 
-                        assert featuresvalidate
-                        self.logger.info("Every feature as the correct areatype")
-                        self.opstatus.add_info(stage=3, msg = "Every feature has the correct areatype value one of: red, yellow, green, green2, green3")
-                    except AssertionError as e: 
-                        self.logger.error("Features in a shapefile must have allowed areatype attributes")
-                        self.opstatus.add_error(stage=3, msg = "Features in a shapefile must have allowed areatype attributes")
-                        
+                try: 
+                    assert featuresvalidate
+                    self.logger.info("Every feature as the correct areatype")
+                    self.opstatus.add_info(stage=3, msg = "Every feature has the correct areatype value one of: red, yellow, green, green2, green3")
+                except AssertionError as e: 
+                    self.logger.error("Features in a Geopackage must have allowed areatype attributes")
+                    self.opstatus.add_error(stage=3, msg = "Features in a Geopackage must have allowed areatype attributes")
                     
+                
+                
                 if schemavalidates and featuresvalidate:
-                        self.opstatus.set_status(stage=3, status=1, statustext ="Shapefile has the areatype column and correct values in the attribtute table.")
-                        self.opstatus.add_success(stage=3, msg = "Shapefile has the areatype column and correct values in the attribtute table")
+                        self.opstatus.set_status(stage=3, status=1, statustext ="Geopackage has the areatype column and correct values in the attribtute table.")
+                        self.opstatus.add_success(stage=3, msg = "Geopackage has the areatype column and correct values in the attribtute table")
                 else:
-                    self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: <a href='https://community.geodesignhub.com/t/geojson-shapefile-feature-attributes/55' target='_blank'>GeoJSON / Shapefile feature attributes</a>")
+                    self.opstatus.set_status(stage=3, status=0, statustext ="A areatype attribute is either not present or have the correct value or the features are not 'Polygon' geometry. For further information please refer: <a href='https://community.geodesignhub.com/t/geojson-shapefile-feature-attributes/55' target='_blank'>GeoJSON / Geopackage feature attributes</a>")
                     if not featuresvalidate:
-                        self.opstatus.add_error(stage=3, msg = "Your shapefile attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
+                        self.opstatus.add_error(stage=3, msg = "Your Geopackage attribute table must have a areatype column with the correct attribute and all features should be 'Polygon' geometry.")
                     if not schemavalidates:                        
-                        self.opstatus.add_error(stage=3, msg = "Your Shapefile does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
+                        self.opstatus.add_error(stage=3, msg = "Your Geopackage does not have the correct values for the areatype column, it has to be one of  red, yellow, green, green2, green3")
 
                 # Reproject the file. 
                 if schemavalidates and featuresvalidate:
-                    reprojectedfile, hasReprojErrors = myFileOps.reprojectFile(filepath)
+                    spfile = myFileOps.multipart_to_singlepart(filepath)
+                    reprojectedfile, hasReprojErrors = myFileOps.reprojectFile(spfile)
 
                     if hasReprojErrors:
                         self.opstatus.set_status(stage=4, status=4, statustext ="There were errors in reprojecting some features, they are removed from output.")
                     else: 
-                        self.opstatus.set_status(stage=4, status=1, statustext ="Shapefile reprojected successfully")
+                        self.opstatus.set_status(stage=4, status=1, statustext ="Geopackage reprojected successfully")
 
                     self.opstatus.add_success(stage=4, msg = "Reprojected file successfully written successfully")
 
                     simplifiedfile, bounds = myFileOps.simplifyReprojectedFile(reprojectedfile)
+                    
                     allBounds.append(bounds)
                     try:
-                        gjFile = myShpFileHelper.convert_shp_to_geojson(simplifiedfile, self.WORKING_SHARE) 
+
+                        gjFile = myShpFileHelper.convert_gpkg_to_geojson(simplifiedfile, self.WORKING_SHARE) 
                     except Exception as e: 
-                        self.logger.error("Error in converting shapefile to Geojson %s" %e)
-                        self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Shapefile to GeoJSON")
-                        self.opstatus.add_error(stage=6, msg = "Error in converting Shapefile to GeoJSON %s" %e)
+                        self.logger.error("Error in converting Geopackage to Geojson %s" %e)
+                        self.opstatus.set_status(stage=6, status=0, statustext ="Error in converting Geopackage to GeoJSON")
+                        self.opstatus.add_error(stage=6, msg = "Error in converting Geopackage to GeoJSON %s" %e)
 
                     with open(gjFile,'r') as gj:
                         allGJ[f] = json.loads(gj.read())
@@ -226,7 +268,7 @@ class ConvertEvaluation():
                     self.opstatus.add_error(stage=4, msg = "Check the attribute table for areatype column and correct areatype value.")
                     self.opstatus.set_status(stage=5, status=0, statustext ="File attribute table does not validate, therefore will not simplify")
                     self.opstatus.add_error(stage=5, msg = "Check the attribute table for areatype column and correct areatype value")
-                    self.opstatus.set_status(stage=6, status=0, statustext ="Shapefile not converted to GeoJSON. ")
+                    self.opstatus.set_status(stage=6, status=0, statustext ="Geopackage not converted to GeoJSON. ")
                     self.opstatus.add_error(stage=6, msg = "File will not be converted to GeoJSON, see earlier errors")
                     self.opstatus.set_status(stage=7, status=0, statustext ="Performance testing not started, please upload the correct file")
                     self.opstatus.add_error(stage=7, msg = "File performance will not be checked, please review earlier errors")
@@ -356,9 +398,9 @@ class ConvertEvaluation():
                 else:
                     self.opstatus.set_status(stage=7, status=1)
         else:
-            self.logger.warning("Could not find .shp in the root of the zip archive.")
-            self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .shp in the root of the zip archive.")
-            self.opstatus.add_error(stage=2, msg = "Please ensure that all Shapefiles are in the root directory, the current file does not have it in the root or there are multiple shapefiles in the zip archive.")
+            self.logger.warning("Could not find the gkpg file.")
+            self.opstatus.set_status(stage=2, status=0, statustext ="Could not find .gpkg file.")
+            self.opstatus.add_error(stage=2, msg = "Please ensure that you are upload Geopackage file with a .gpkg extension.")
 
         return allGJ , self.opstatus.get_allstatuses()
 

@@ -1,8 +1,8 @@
 # Evaluation Maps Converter
 
-A tool to convert Evaluation Map Shapefiles so that they can be uploaded on Geodesign Hub.
+A tool to convert Evaluation Map Geopackages so that they can be uploaded on Geodesignhub.
 
-Geodesign Hub uses GeoJSON and [EPSG4326](http://espg.io/4326) projection and this tool will reproject your shapefiles before simplifying. In addition it will also create a GeoJSON that can be used in Geodesign Hub. Finally, this tool takes the GeoJSON and tests performance of it for geo spatial operations that are conducted on the Geodesign Hub Server. It can be useful to identify issues such as geometry errors and also test performance. 
+Geodesign Hub uses GeoJSON and [EPSG4326](http://espg.io/4326) projection and this tool will reproject your vector data before simplifying. In addition it will also create a GeoJSON that can be used in Geodesign Hub. Finally, this tool takes the GeoJSON and tests performance of it for geo spatial operations that are conducted on the Geodesign Hub Server. It can be useful to identify issues such as geometry errors and also test performance. 
 
 It is Python Flask App that is deployed on Heroku.
 
@@ -21,7 +21,7 @@ The script creates a union of the red, yellow and green features and intersects 
 
 
 ### Background
-Evaluation Maps produced by GIS tools as Shapefiles can be very large. In addition, Shapefiles cannot be directly uploaded to Geodesign Hub. This is a tool that will help in simplifying the maps, reprojecting them to EPSG 4326 and generate a GeoJSON for you. Then it can be directly uploaded to Geodesign Hub.
+Evaluation Maps produced by GIS tools as Geopackages can be very large. In addition, Geopackages cannot be directly uploaded to Geodesign Hub. This is a tool that will help in simplifying the maps, reprojecting them to EPSG 4326 and generate a GeoJSON for you. Then it can be directly uploaded to Geodesign Hub.
 
 Please review the [data simplification](https://community.geodesignhub.com/t/simplifying-gis-maps-and-features/47) article to understand the file size and performance requirements for the tool.
 
