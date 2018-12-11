@@ -8,7 +8,6 @@ gunicorn
 itsdangerous
 requests
 sqlitedict
-pyproj
 shapely
 rtree
 numpy
