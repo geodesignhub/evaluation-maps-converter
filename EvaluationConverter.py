@@ -208,7 +208,7 @@ class ConvertEvaluation():
                     schema = curfile.schema
                     schemavalidates = myShpFileHelper.validateSchema(schema)    
                     featuresvalidate = myShpFileHelper.validateFeatures(curfile)
-                print(schemavalidates, featuresvalidate)
+
                 try: 
                     assert schemavalidates
                     self.logger.info("Every feature is a polygon")

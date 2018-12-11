@@ -51,34 +51,30 @@ def api_root():
 def upload_file():
     op = {}
     if request.method == 'POST':
-        
         if 'file' not in request.files:
             op['msg'] = 'No file part'
-            op['status']=0
+            op['opstatus'] = 0
         file = request.files['file']
 
         if file.filename == '':
             op['msg']="No File Selected"
-            op['status']=0
+            op['opstatus'] = 0
 
+        if not allowed_file(file.filename):
+            op['msg']="Incorrect file Extension"
+            op['opstatus'] = 0
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
             os.mkdir(app.config['UPLOAD_FOLDER'])
-            
-        if not allowed_file(file.filename):
-      
-            op['msg']="Incorrect file Extension"
-            op['status']=0
-        elif file and allowed_file(file.filename):
+        if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             op['msg']="File Uploaded successfully"
             
             myEvalConverter = EvaluationConverter.ConvertEvaluation()
-            ""
             gj, status = myEvalConverter.convert()
             op['gj'] = gj
             op['status'] = status
+            op['opstatus'] = 1
             myEvalConverter.cleanDirectories()
 
     return Response(json.dumps(op), status=200, mimetype='application/json')

@@ -218,7 +218,8 @@
 
         $('#upload-file-btn').click(function () {
             if ($('input[name=file]').get(0).files.length === 0) {
-
+                
+                $("#loadingimg").hide();
                 humane.log("No files selected", {
                     addnCls: 'humane-flatty-error'
                 });
@@ -240,19 +241,16 @@
                 humane.log("Uploading file to server..", {
                     addnCls: 'humane-flatty-info'
                 });
-                promise.done(function (data) {
+                promise.done(function(data) {
                     humane.log("Processing received data..", {
                         addnCls: 'humane-flatty-info'
                     });
+                    if (data.opstatus ==1 ){
                     var dataisOK = processserverdata(JSON.parse(data.status));
-                    
-                    if (dataisOK) {
-                        $("#loadingimg").hide();
-                        for (var fname in data.gj) {
-                            var curgj = data.gj[fname];
-                            gj = curgj;
-
-
+                    for (var fname in data.gj) {
+                        var curgj = data.gj[fname];
+                        gj = curgj;
+                        if (dataisOK) {
                             if (mapInitialized === false) {
                                 map = L.map('opmap').setView([51.505, -0.09], 13);
                                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -278,23 +276,22 @@
                             bounds = gjlayer.getBounds();
                             map.fitBounds(bounds);
                         }
-                        
+                    }
+
                     humane.log("Data Processed..", {
                         addnCls: 'humane-flatty-success'
                     });
                     $("#performanceoutput").show();
                     }
                     else{
-                        $("#loadingimg").hide();
-                        humane.log("Error in processing your file, check the file extension"), {
-                            addnCls: 'humane-flatty-warning'
-                        }
+                        
+                    humane.log(data.msg, {
+                        addnCls: 'humane-flatty-warning'
+                    });
                     }
-
                 });
-                promise.fail(function (data) {
+                promise.fail(function(data) {
                     $("#loadingimg").hide();
-
                     humane.log("Error in receiving data, Please check the filesize.", {
                         addnCls: 'humane-flatty-error'
                     });
