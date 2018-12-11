@@ -215,7 +215,7 @@ class ConvertEvaluation():
                     self.opstatus.add_info(stage=3, msg = "Every feature is a polygon")
                 except AssertionError as e:
                     self.logger.error("Your file has features that are not 'Polygons', please ensure that all 3D Polygons etc. are removed.")
-                    self.opstatus.add_error(stage=3, msg = "Input Geopackage does not have the correct geometry.")
+                    self.opstatus.add_error(stage=3, msg = "Input Geopackage does not have the correct geometry. Your file has features that are not 'Polygons', please ensure that all 3D Polygons etc. are removed.")
                     
                 try: 
                     assert featuresvalidate
