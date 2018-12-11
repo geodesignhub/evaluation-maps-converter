@@ -10,7 +10,6 @@ if __name__ == "__main__":
     af = [f.split('.')[0] for f in listdir(rawpath) if isfile(join(rawpath, f))]
     onlyfiles =  (list(set(af)))
 
-
     opfolder = os.path.join(cwd, 'output')
     if not os.path.exists(opfolder):
         os.mkdir(opfolder)
