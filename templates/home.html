@@ -1,5 +1,5 @@
 {% extends "layout.html" %} {% block body %}
-<p class="subtitle">This tool converts a vector evaluation GeoPackage to GeoJSON and also tests performance. The maximum upload size is capped at 2MB. Geopackage is a Vector file format, for more information please see <a href="http://switchfromshapefile.org" target="_blank">here</a>. </p>
+<p class="subtitle">This tool converts a vector <a href="https://community.geodesignhub.com/t/making-evaluation-maps/62" target="_blank">Geodesignhub evaluation map</a> in GeoPackage format to GeoJSON and also tests performance. The maximum upload size is capped at 2MB. </p>
 <table>
     <thead>
     </thead>
@@ -13,9 +13,9 @@
                             <input name="file" type="file" accept=".gpkg">
                             <span>File must be Geopackage in a .gpkg format</span>
                         </li>
+                        
                         <li>
-                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation
-                                GeoPackage</button>
+                            <button class="pumpkin-flat-button" id="upload-file-btn" type="button">Upload Evaluation GeoPackage</button>
                         </li>
                     </ul>
                 </form>
